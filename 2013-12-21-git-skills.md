@@ -4,7 +4,7 @@ git 高级技巧
 ## 从指定版本开始 clone 代码
 
 以 [gollum](https://github.com/gollum/gollum) 为例,
-看了一下最新版 tag 是 "v2.5.2", 使用浅 clone 的拉取一份快照到本地.
+目前最新版 tag 是 "v2.5.2", 使用浅 clone 的拉取一份快照到本地.
 
 ```sh
 observer.hany@ali-59375nm:~/workspace/third$ git init gollum
