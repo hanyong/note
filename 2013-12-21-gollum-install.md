@@ -5,6 +5,22 @@ gollum 是个很棒的 wiki (文档服务器), 支持 github markdown.
 可惜用了 ruby 语言, 一直很讨厌 ruby,
 不过 gitlab 的 wiki 实在太烂, 还是决定自己搭一下 gollum.
 
+**快速安装** 可参考如下命令 (需要 sudo 权限, 安装到系统目录):
+
+```sh
+sudo yum install -b current ruby
+sudo gem sources --remove https://rubygems.org/
+sudo gem sources -a http://ruby.taobao.org/
+
+wget http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-RHEL6-x64.tgz
+tar xf icu4c-52_1-RHEL6-x64.tgz
+sudo rsync -av --itemize-changes usr/local/ /usr/
+
+sudo gem install gollum
+```
+
+个人目录 "绿色" 安装笔记如下.
+
 首先打开 github gollum 主页 (https://github.com/gollum/gollum),
 了解安装方法.
 看了一下最新版 tag 是 "v2.5.2", 
@@ -21,10 +37,10 @@ gollum 是个很棒的 wiki (文档服务器), 支持 github markdown.
 - Will not work on Windows (because of [grit](https://github.com/github/grit))
 
 目标机器是版本较旧的 redhat, 
-估计 yum 仓库上也没有高版本的 python 和 ruby.
+yum 仓库上没有高版本的 python.
 python 是可以 "绿色安装" 的, ruby 应该也可以,
 创建 `~/local` 文件夹, 打算将所需软件都安装到这下面, 不影响原有系统.
-将 `~/local/bin` 添加到 PATH 开头, 以使用新安装的软件.
+将 `~/local/bin` 添加到 PATH 前面, 以使用新安装的软件.
 python 很容易从源码安装, ruby 也看看是否可以简单的从源码安装.
 创建 `~/build` 文件夹, 下载编译相关源码.
 
@@ -106,8 +122,6 @@ irb(main):001:0>
 https://rubygems.org/
 [admin@v125205215 ruby-2.0.0-p353]$ gem sources --remove https://rubygems.org/
 https://rubygems.org/ removed from sources
-[admin@v125205215 ruby-2.0.0-p353]$ gen sources -a http://ruby.taobao.org/
-bash: gen: command not found
 [admin@v125205215 ruby-2.0.0-p353]$ gem sources -a http://ruby.taobao.org/
 http://ruby.taobao.org/ added to sources
 [admin@v125205215 ruby-2.0.0-p353]$ gem sources -l
@@ -158,7 +172,7 @@ rsync -av --itemize-changes usr/local/ ~/local/
 export LD_LIBRARY_PATH=$HOME/local/lib:$LD_LIBRARY_PATH
 ```
 
-icu4c 二进制文件可以使用, 但是编译参数要添加 `--detect-prefix` 才行.
+icu4c 二进制文件可以使用, 但是获取编译参数要添加 `--detect-prefix` 才行.
 
 ```sh
 [admin@v125205215 build]$ uconv --version
@@ -274,11 +288,10 @@ READ THIS: https://github.com/mxcl/homebrew/wiki/troubleshooting
 ```
 
 本身对 linuxbrew 不了解, 又是试验版本, 感觉存在大把问题, 
-**发生错误后为什么不能保留现场给用户排查问题呢?**
 费了半天劲没能解决问题, 放弃 linuxbrew. 
 
 直接将解压的二进制文件安装到 "/usr/local/Cellar/icu4c".
-因为 ruby 脚本在系统路径找不到 icu4c 才会找库才会找 homebrew 路径,
+因为 ruby 脚本在系统路径找不到 icu4c 库才会找 homebrew 路径,
 同时把 `~/local/` 下的 icu4c 相关文件删掉.
 
 ```sh
@@ -299,5 +312,40 @@ linuxbrew 相关设置 (PATH, LD_LIBRARY_PATH) 也清掉.
 经过较长时间的等待后安装成功,
 "gollum" 启动脚本安装到 "~/local/bin/gollum".
 设置 "`LD_LIBRARY_PATH=/usr/local/lib`" 后运行 `gollum` 成功,
-否则加载不到 icu4c 动态库.
+不设置会加载不到 icu4c 动态库.
+貌似也不用额外安装文档格式模块, markdown 等很多格式都默认支持了.
+
+使用 linuxbrew 可按如下步骤安装.
+
+```sh
+sudo yum install -b current ruby
+
+## fix git ssl error
+git config --global http.sslVerify false
+#git clone https://github.com/Homebrew/linuxbrew.git ~/.linuxbrew
+git clone --depth 1 https://github.com/Homebrew/linuxbrew.git ~/.linuxbrew
+## add these to ~/.bash_profile
+cat >> ~/.bash_profile <<'EOF'
+export PATH="$HOME/.linuxbrew/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/.linuxbrew/lib:$LD_LIBRARY_PATH"
+EOF
+export PATH="$HOME/.linuxbrew/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/.linuxbrew/lib:$LD_LIBRARY_PATH"
+## fix old gcc not support "-msse4", see [[2013-12-21-linuxbrew-gcc-error]]
+sed -r -i 's#^(\s*DEFAULT_FLAGS\b.*?)-msse4(.*)$#\1\2#' ~/.linuxbrew/Library/Homebrew/extend/ENV/std.rb
+## use taobao ruby mirror
+sed -i "s#url '"'http://cache.ruby-lang.org/pub/ruby/.*.tar.bz2'\''#url '\''http://ruby.taobao.org/mirrors/ruby/ruby-2.0.0-p353.tar.bz2'\''#' ~/.linuxbrew/Library/Formula/ruby.rb
+
+brew install ruby
+gem sources --remove https://rubygems.org/
+gem sources -a http://ruby.taobao.org/
+
+## install python failed, can skip?
+#brew install python
+
+brew install icu4c
+brew link --force icu4c
+
+gem install gollum
+```
 
