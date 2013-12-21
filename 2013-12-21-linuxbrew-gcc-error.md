@@ -248,3 +248,13 @@ Already downloaded: /home/admin/.cache/Homebrew/icu4c-52.1.tgz
 brew 还能安装 python, ruby 自身, 甚至 gcc 等基础软件,
 感觉是个不错的跨平台软件包管理器, 可惜用了讨厌的 ruby.
 
+brew 将每个软件包版本安装到独立文件夹,
+使用软链接管理默认使用的软件包, 类似 linux 的 `update-alternatives`.
+icu4c 可能跟其他软件包有冲突, 默认没有建立连接.
+建立, 取消连接可使用:
+
+```sh
+brew link icu4c
+brew unlink icu4c
+```
+
