@@ -18,12 +18,12 @@ eclipse 自带的插件通常包含两个包,
 插件 jar 包提供了 plugin.xml 文件, 
 配合源码包可以很方便的学习插件开发代码.
 
-运行时内核 Platform 不在插件列表中,
-但 "Eclipse Platform SDK" 这个包包含了运行时内核的插件开发文档和扩展点文档.
+"Eclipse Platform" 是运行时内核,
+"Eclipse Platform SDK" 包含了运行时内核的插件开发文档和扩展点文档.
 安装这个包就可以在 eclipse 的帮助文档中看到 "Platform Plug-in Developer Guide".
 也可以直接从网上 [eclipse help](http://help.eclipse.org/kepler/index.jsp) 查看 eclipse 所有文档,
 但安装在本地查看会更流畅.
-注意 "Eclipse Platform SDK" 和 "Eclipse SDK" 是不一样的.
+注意 "Eclipse Platform SDK" 和 "Eclipse SDK" 不一样.
 
 [[eclipse-plugin-develop/help-plugin-develop.png]]
 
