@@ -271,15 +271,34 @@ python.exe -c "import sys, subprocess; subprocess.call(sys.argv[1:])" cmd /c pau
 
 ## windows 上调用脚本问题
 
-在 `cmd` 下调用脚本时, 
-定位命令文件, 查找脚本解释器等这些事都是由 `cmd` 命令解释器完成的,
+[CreateProcess][] 函数不支持直接运行脚本,
+在 `cmd` 命令解释器下调用脚本时, 
+定位命令文件, 查找脚本解释器等这些事都是由 `cmd` 完成的,
 操作系统没有提供完成类似功能的 API.
+脚本不只是批处理文件, 还可能有 python, js 等.
+
+开发人员有几种选择:
+0. 实现类似 `cmd` 执行脚本的逻辑.
+
+这样要使用 windows 的一些特性和函数, 代价比较大, 而且不一定完善.
+目前看到的一些程序库都没有这样做的.
+
+0. 使用 `cmd` 间接调用脚本.
+
 文档上有一段说明, 可以使用 `cmd /c` 执行批处理脚本文件.
 
 >To run a batch file, you must start the command interpreter; 
 set lpApplicationName to cmd.exe 
 and set lpCommandLine to the following arguments: 
 /c plus the name of the batch file.
+
+`cmd /c` 执行命令时的行为跟在 cmd 命令解释器中执行命令一样.
+不只是批处理文件, 所有脚本和二进制文件, 都可以用 `cmd /c` 执行.
+所以 `cmd /c` 可以作为 windows 下调用外部命令的通用方式,
+但是这样做也有一些问题.
+
+* 调用二进制文件和其他脚本增加一个调用层次
+* GUI 下调用产生一个多余的黑框
 
 使用 `cmd /c` 执行外部脚本:
 
@@ -292,10 +311,34 @@ Default locale: zh_CN, platform encoding: GBK
 OS name: "windows xp" version: "5.1" arch: "x86" Family: "windows"
 ```
 
-`cmd /c` 执行命令时的行为跟在 cmd 命令解释器中执行命令一样.
-不只是批处理文件, 所有脚本和二进制文件, 都可以用 `cmd /c` 执行.
-所以 `cmd /c` 可以作为 windows 下调用外部命令的通用方式,
-但是这样做也有一些问题.
+0. 执行脚本时指定解释器.
+
+即不要直接执行脚本, 总是通过解释器执行脚本.
+第一种方案中的自动找解释器变成手动找解释器.
+但有时开发人员也不能确定解释器是哪个, 比如 js 解释器是那个?
+
+cmd 有两个作用, 一是作为批处理文件的解释器, 
+二是找其他脚本的解释器.
+
+## windows 下执行命令的几个问题
+
+windows 区分 CLI 程序和 GUI 程序,
+解释器也有两个版本, 如 "python" 和 "pythonw", "java" 和 "javaw".
+在 GUI 程序下调用 CLI 程序, 如 "cmd", "cmd" 没有 GUI 版本,
+会产生一个多余的黑框 (TODO: 重定向输入输出后黑框是否还在 ?).
+
+cmd shell 下启动 GUI 程序直接返回,
+但批处理脚本中会等待.
+
+start 新开一个窗口执行命令.
+GUI 没有命令行窗口, 有无 start 一样, 
+但是 `start /WAIT` 可以等待 GUI 程序退出再返回.
+
+cmd 语法, 冒号表示字符串, 
+冒号内部可以冒号转义冒号, 即冒号内部两个冒号是一个冒号.
+冒号内部也可以使用 `'\"'` 转义冒号, 似乎更清晰点, 避免混淆.
+cmd 语法功能有限, 无法表达一些特殊参数, 
+比如 `"a > b"` 总是导致重定向.
 
 [exec*]: http://man7.org/linux/man-pages/man3/execl.3.html
 [CreateProcess]: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682425%28v=vs.85%29.aspx
