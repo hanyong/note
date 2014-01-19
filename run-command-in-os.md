@@ -345,6 +345,9 @@ windows 区分 CLI 程序和 GUI 程序,
 ### 结论
 
 实现跨平台命令调用需要针对 windows 平台进行一些特殊处理.
+判断操作系统是否 windows 可以检查
+`System.getProperty("os.name").toLowerCase(Locale.US)` 
+是否包含字符串 `"windows"`.
 
 0. 如果是可执行二进制文件, 直接调用, 不需要特殊处理.
 0. 如果是脚本并且知道解释器, 可以通过指定解释器调用. 
@@ -352,6 +355,21 @@ windows 区分 CLI 程序和 GUI 程序,
 0. 其他不知道的命令, 通过 `cmd /c` 调用, GUI 程序可能产生黑框问题.
 
 最后, 还要确认一下一些特殊参数处理在 windows 上是否正确.
+
+apache "commons-exec" 库提供了启动进程的一些便捷功能和工具类,
+简单测试了下到目前位置的最新 "1.2" 版本,
+发这个库是有一些问题的.
+
+0. 默认的 `PumpStreamHandler` 及 `DefaultExecutor` 
+没有复制标准输入, 导致子进程标准输入被关闭.
+需要显示设置 `new PumpStreamHandler(System.out, System.err, System.in)`.
+
+0. windows 下直接执行脚本也是有问题的. 
+没有很好的处理加 `cmd /c` 的规则.
+这个逻辑最好还是留给应用开发者去处理.
+
+所以 java 下最好还是直接使用 ProcessBuilder,
+使用 3 方工具库最好 review 一下相关代码逻辑.
 
 ## windows cmd 下执行命令的几个问题
 
