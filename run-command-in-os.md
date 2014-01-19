@@ -7,7 +7,8 @@
 然后在命令行 shell 下输入执行.
 外部程序在 shell 下叫做外部命令.
 外部命令分为二进制可执行文件 (以下简称二进制) 和脚本两种.
-windows 下是 "cmd" 命令解释器, linux 下通常是 "bash" shell.
+windows 下 "shell" 是 "cmd", windows 叫法是命令解释器, 
+linux 下通常是 "bash".
 两者语法和功能差异很大, 但执行命令的基本方式是相似的.
 
 执行脚本时大概流程如下:
@@ -150,14 +151,14 @@ OS name: "linux", version: "3.5.0-45-generic", arch: "i386", family: "unix"
 ```
 
 windows 下运行新进程使用的是 [CreateProcess][] 函数,
-函数参数必须指定二进制可执行文件, 不能执行脚本.
+函数参数必须指定二进制可执行文件, 不能直接执行脚本.
 python `subprocess.call()` 函数的 executable 参数与 CreateProcess 一致,
 如果没有指定 executable, 则从命令行参数第一个 token 查找二进制可执行文件.
 
 java 中可以用 `ProcessBuilder` 实现类似的功能.
-通常子进程会继承父进程的标准输入输出,
+通常子进程会继承父进程的标准输入输出.
 与常规行为不同, `ProcessBuilder` 默认重定向了输入输出,
-并且直到 jdk7 才支持设置成继承,
+并且直到 jdk7 才支持设置成继承.
 java 在这方面的支持是比较差.
 
 示例代码如下:
@@ -205,18 +206,6 @@ Caused by: java.io.IOException: CreateProcess error=2, ?????????
         ... 2 more
 ```
 
-windows 和 linux 还有一个差别, 
-linux 将命令行解析成一个字符串列表, 再传递给应用程序.
-而 windows 直接将整个命令行输入作为一个字符串传递给应用程序,
-应用程序自己完成解析.
-C 语言规范定义了 main 函数接受一个字符串数组参数,
-windows 下实际是由应用程序入口函数完成参数解析, 再调用 C 的 main 函数.
-应用也可以手动调用解析函数, 解析规则与 cmd 命令行参数的解析规则一致.
-有些 windows 程序不按常规方式解析命令行, 
-而直接使用整个命令行字符串进行操作, 如 echo, explorer, (notepad?).
-使用字符串列表传递参数更结构化, 更清晰和方便,
-所以 python, java 等语言都使用字符串列表作为进程参数.
-
 为了查看 java 启动外部进程的命令行参数, 
 增加调试参数使外部进程暂停:
 
@@ -236,24 +225,41 @@ java 的实现应该跟 python 是类似的,
 使用命令名做为命令行的第一个 token.
 但java (截止到 jdk6) 不支持设置 executable.
 
-## windows 上 ProcessBuilder bug
+## windows 上命令行转换和 jdk ProcessBuilder bug
 
-测试了一下发现 jdk6 在 windows 上将字符串列表转成命令行参数时还有 bug .
+windows 和 linux 还有一个差别, 
+linux 使用字符串列表作为进程参数, 
+shell 将命令行解析成字符串列表, 再启动进程.
+而 windows 直接将整个命令行作为一个字符串传递给应用程序,
+应用程序自己完成解析.
 
+C 语言规范定义了 main 函数接受一个字符串数组参数,
+windows 下实际是由程序入口函数完成解析, 再调用 C 的 main 函数.
+应用也可以手动调用解析函数, 解析规则与 cmd 执行命令行的解析规则一致.
+有些 windows 程序不按常规方式解析命令行, 
+而直接使用整个命令行字符串进行操作, 如 echo, explorer, (notepad?).
+
+使用字符串列表传递参数更结构化, 更清晰和方便,
+所以 python, java 等语言都使用字符串列表作为进程参数.
+这些语言在 windows 上的实现通常是由入口函数解析命令行得到参数列表,
+启动子进程时 (如 subprocess.call() 或 ProcessBuilder) 
+再将参数列表转成一个命令行字符串.
+
+测试了一下发现 jdk6 在 windows 上将字符串列表转成命令行时还有 bug .
 如执行 jvm 的命令行如下:
 
 ```bat
 java -jar target\test.jar cmd /c pause "\"a b\""
 ```
 
-jvm 调用 windows 解析命令行函数后应该得到以下参数:
+jvm 调用 windows 命令行解析函数后应该得到以下参数:
 
 ```python
 ["cmd", "/c", "pause", '"a b"']
 ```
 
-jvm 使用 ProcessBuilder 启动 cmd 进程时
-应该再将字符串 `'"a b"'` 再转义成 cmd 命令行的表示法,
+jvm 使用 ProcessBuilder 启动 cmd 进程时,
+应该再将字符串 `'"a b"'` 转义成 cmd 命令行的表示法,
 即与启动 jvm 的原命令行等价.
 从 [procexp][] 看到 jvm 启动 cmd 的命令行参数是不正确的:
 
@@ -261,10 +267,16 @@ jvm 使用 ProcessBuilder 启动 cmd 进程时
 "cmd" /c pause "a b"
 ```
 
-而 python 使用 `subprocess.call()` 完成相同的功能, 可以得到正确的结果.
+而使用 python 的 `subprocess.call()` 完成相同功能:
 
 ```bat
 python.exe -c "import sys, subprocess; subprocess.call(sys.argv[1:])" cmd /c pause "\"a b\""
+```
+
+可以得到正确结果:
+
+```bat
+cmd /c pause "\"a b\""
 ```
 
 [[run-command-in-os/java-process-builder-bug.png]]
