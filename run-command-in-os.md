@@ -55,6 +55,21 @@ Default locale: zh_CN, platform encoding: GBK
 OS name: "windows xp" version: "5.1" arch: "x86" Family: "windows"
 ```
 
+### windows cmd 下执行命令的几个问题
+
+cmd "shell" 下启动 GUI 程序直接返回,
+但批处理脚本中会等待.
+
+start 新开一个窗口执行命令.
+GUI 没有命令行窗口, 有无 start 一样, 
+但是 `start /WAIT` 可以等待 GUI 程序退出再返回.
+
+cmd 语法, 冒号表示字符串, 
+字符串内部可以冒号转义冒号, 即字符串内部两个连续冒号表示一个冒号.
+字符串内也可以使用 `'\"'` 转义冒号, 似乎更清晰点, 避免混淆.
+cmd 语法功能有限, 无法表达一些特殊参数, 
+比如 `"a > b"` 总是导致重定向.
+
 ## 程序代码执行外部命令
 
 python 中可以使用 `subprocess.call()` 函数实现相同的功能.
@@ -346,9 +361,9 @@ windows 区分 CLI 程序和 GUI 程序,
 
 有时开发人员也不能知道执行脚本的解释器是哪个, 比如 js 解释器?	
 
-### 结论
+## 跨平台调用命令
 
-实现跨平台命令调用需要针对 windows 平台进行一些特殊处理.
+实现跨平台调用命令需要针对 windows 平台进行一些特殊处理.
 判断操作系统是否 windows 可以检查
 `System.getProperty("os.name").toLowerCase(Locale.US)` 
 是否包含字符串 `"windows"`.
@@ -356,13 +371,13 @@ windows 区分 CLI 程序和 GUI 程序,
 0. 如果是可执行二进制文件, 直接调用, 不需要特殊处理.
 0. 如果是脚本并且知道解释器, 可以通过指定解释器调用. 
 注意 CLI 和 GUI 要用不同的解释器版本.
-0. 其他不知道的命令, 通过 `cmd /c` 调用, GUI 程序可能产生黑框问题.
+0. 其他不确定的命令, 通过 `cmd /c` 调用, GUI 程序可能产生黑框问题.
 
 最后, 还要确认一下一些特殊参数处理在 windows 上是否正确.
 
 apache "commons-exec" 库提供了启动进程的一些便捷功能和工具类,
-简单测试了下到目前位置的最新 "1.2" 版本,
-发这个库是有一些问题的.
+简单测试了下到目前为止的最新 "1.2" 版本,
+发这个库还是有一些问题的.
 
 0. 默认的 `PumpStreamHandler` 及 `DefaultExecutor` 
 没有复制标准输入, 导致子进程标准输入被关闭.
@@ -374,21 +389,6 @@ apache "commons-exec" 库提供了启动进程的一些便捷功能和工具类,
 
 所以 java 下最好还是直接使用 ProcessBuilder,
 使用 3 方工具库最好 review 一下相关代码逻辑.
-
-## windows cmd 下执行命令的几个问题
-
-cmd "shell" 下启动 GUI 程序直接返回,
-但批处理脚本中会等待.
-
-start 新开一个窗口执行命令.
-GUI 没有命令行窗口, 有无 start 一样, 
-但是 `start /WAIT` 可以等待 GUI 程序退出再返回.
-
-cmd 语法, 冒号表示字符串, 
-字符串内部可以冒号转义冒号, 即字符串内部两个连续冒号表示一个冒号.
-字符串内也可以使用 `'\"'` 转义冒号, 似乎更清晰点, 避免混淆.
-cmd 语法功能有限, 无法表达一些特殊参数, 
-比如 `"a > b"` 总是导致重定向.
 
 [exec*]: http://man7.org/linux/man-pages/man3/execl.3.html
 [CreateProcess]: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682425%28v=vs.85%29.aspx
