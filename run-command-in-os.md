@@ -177,11 +177,13 @@ Caused by: java.io.IOException: CreateProcess error=2, ?????????
         ... 2 more
 ```
 
+与 `subprocess.call()` 一样, 在 windows 下不能直接执行脚本.
+
 ### linux exec 系列函数
 
 在底层实现上,
 linux 运行新进程使用的是 `fork()` + [exec*][] 系列函数.
-`exec*` 系列函数实现了根据脚本找到对应解释器等操作, 可以直接执行脚本.
+`exec*` 系列函数实现了搜索 `PATH`, 找到脚本解释器等操作, 可以直接执行脚本.
 
 如下示例代码 "subprocess_call.c":
 
@@ -226,7 +228,7 @@ python `subprocess.call()` 函数的 executable 参数与 CreateProcess 一致,
 如果没有指定 executable, 则从命令行参数第一个 token 查找二进制可执行文件.
 
 在 `cmd` 命令解释器下调用脚本时, 
-定位命令文件, 查找脚本解释器等这些事是由 `cmd` 完成的,
+搜索 `PATH`, 找到脚本解释器等这些事都是由 `cmd` 完成的,
 操作系统没有提供完成类似功能的 API.
 
 为了查看 java 启动外部进程的命令行参数, 
@@ -245,7 +247,7 @@ Listening for transport dt_socket at address: 8000
 
 java 的实现应该跟 python 是类似的,
 使用命令名 `java` 作为命令行第一个 token, 并且加了引号.
-但java (截止到 jdk6) 不支持设置 executable.
+但 java (截止到 jdk6) 不支持设置 executable.
 
 ## windows 上命令行转换和 ProcessBuilder bug
 
@@ -326,17 +328,6 @@ set lpApplicationName to cmd.exe
 and set lpCommandLine to the following arguments: 
 /c plus the name of the batch file.
 
-`cmd /c` 执行命令时的行为跟在 cmd 命令解释器中执行命令一样.
-不只是批处理文件, 所有脚本和二进制文件, 都可以用 `cmd /c` 执行.
-甚至可以用 `cmd /c` 作为 windows 下调用外部命令的通用方式,
-但是这样也有一些问题.
-
-* `cmd` 是 CLI 程序 (没有 GUI 版), GUI 下调用 cmd 会产生一个多余的黑框
-(TODO: 重定向输入输出后黑框是否还在 ?)
-* 调用二进制文件和其他脚本时增加了一个调用层次
-
-使用 `cmd /c` 执行外部脚本:
-
 ```bat
 D:\home\observer.hany\workspace\test>java -jar target\test.jar cmd /c mvn -version
 Apache Maven 2.2.1 (r801777; 2009-08-07 03:16:01+0800)
@@ -346,14 +337,25 @@ Default locale: zh_CN, platform encoding: GBK
 OS name: "windows xp" version: "5.1" arch: "x86" Family: "windows"
 ```
 
+`cmd /c` 执行命令时的行为跟在 cmd 命令解释器中执行命令一样.
+不只是批处理文件, 所有脚本和二进制文件, 都可以用 `cmd /c` 执行.
+甚至可以用 `cmd /c` 作为 windows 下调用外部命令的通用方式,
+但是这样也有一些问题.
+
+* `cmd` 是 CLI 程序 (没有 GUI 版), GUI 下调用 cmd 会产生一个多余的黑框
+(TODO: 重定向输入输出后黑框是否还在 ?)
+* 调用二进制文件和其他脚本时增加了一个调用层次
+
 ### 执行脚本时指定解释器
 
 脚本不只是批处理文件, 还可能有 python, js 等.
 `cmd` 有两层功能, 一是作为批处理文件的解释器,
-二是找到其他脚本对应的解释器.
-使用 `cmd /c` 调用所有脚本其实是把 `cmd /c` 作为所有脚本的通用解释器.
-手动指定解释器相当于手动实现了 `cmd` 的部分功能,
-可以避免使用 `cmd /c` 的部分缺点.
+二是搜索 `PATH` 及找到其他脚本的解释器.
+
+[CreateProcess][] 搜索 `PATH` 时, 只会查找二进制文件, 不会搜索脚本.
+如果知道脚本路径, 可以指定解释器调用脚本, 避免 `cmd /c` 的部分缺点.
+调用指定路径脚本的场景很罕见, 通常我们都只通过命令名调用命令,
+这相当于手动实现了搜索 `PATH` 及找到解释器的功能.
 
 windows 区分 CLI 程序和 GUI 程序,
 解释器也有两个版本, 如 "python" 和 "pythonw", "java" 和 "javaw".
@@ -369,15 +371,17 @@ windows 区分 CLI 程序和 GUI 程序,
 是否包含字符串 `"windows"`.
 
 0. 如果是可执行二进制文件, 直接调用, 不需要特殊处理.
-0. 如果是脚本并且知道解释器, 可以通过指定解释器调用. 
+0. 如果知道脚本路径和解释器, 可以指定解释器执行脚本. 
+等同于执行二进制文件的方式.
 注意 CLI 和 GUI 要用不同的解释器版本.
-0. 其他不确定的命令, 通过 `cmd /c` 调用, GUI 程序可能产生黑框问题.
+0. 其他情况, 包括不确定的情况, 通过 `cmd /c` 调用.
+GUI 程序可能会产生黑框问题.
 
 最后, 还要确认一下一些特殊参数处理在 windows 上是否正确.
 
 apache "commons-exec" 库提供了启动进程的一些便捷功能和工具类,
 简单测试了下到目前为止的最新 "1.2" 版本,
-发这个库还是有一些问题的.
+这个库还是有一些问题.
 
 0. 默认的 `PumpStreamHandler` 及 `DefaultExecutor` 
 没有复制标准输入, 导致子进程标准输入被关闭.
