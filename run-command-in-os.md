@@ -298,6 +298,10 @@ linux 下调用命令和 windows 下调用可执行二进制文件的方式都�
 这样要使用一些 windows 的特性和函数, 代价比较大, 而且不一定完善.
 目前看到的一些程序库都没有这样做.
 
+windows 下 "Win + R" 运行命令也不能执行脚本,
+只能在 cmd "shell" 下执行, 或者通过文件关联打开.
+(TODO: [ShellExecute][] 是否可以实现通用的命令调用 ?).
+
 ### 直接调用 cmd 执行脚本
 
 文档上有一段说明, 可以使用 `cmd /c` 执行批处理脚本文件,
@@ -389,4 +393,5 @@ cmd 语法功能有限, 无法表达一些特殊参数,
 [exec*]: http://man7.org/linux/man-pages/man3/execl.3.html
 [CreateProcess]: http://msdn.microsoft.com/en-us/library/windows/desktop/ms682425%28v=vs.85%29.aspx
 [procexp]: http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx
+[ShellExecute]: http://msdn.microsoft.com/en-us/library/windows/desktop/bb762153%28v=vs.85%29.aspx
 
