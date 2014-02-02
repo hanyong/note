@@ -208,15 +208,189 @@ jdt 运行 java 程序前会先自动编译代码, 是如何实现的呢?
 必须用 `count` 和 `iterate` 测试,
 直接用 `adapt` 测试是不行的, 导致菜单项没有显示.
 
-## 三方库
+## 上下文运行
 
-[eclipse orbit](http://eclipse.org/orbit/) 
-项目提供了一些可以在 eclipse 中使用的 3 方库的 bundle,
-如 logback.classic 二进制包和源码.
-从 orbit 下载页面, 
-如 [R20130827064939](http://download.eclipse.org/tools/orbit/downloads/drops/R20130827064939/),
-可以找到 update site 链接
-http://download.eclipse.org/tools/orbit/downloads/drops/R20130827064939/repository/
-,
-或者直接从页面链接下载.
+直接点击工具栏上的运行按钮, 会优先根据上下文运行.
+
+0. 找到 `org.eclipse.debug.ui.DebugUITools` 类所在的 jar 包.
+0. 找到插件 `plugin.xml` 配置文件.
+0. 找到 `org.eclipse.debug.internal.ui.actions.RunLastAction`.
+0. 找到类 `org.eclipse.debug.ui.actions.RelaunchLastAction`.
+
+上下文运行 action 代码如下:
+
+```java
+	public void run(IAction action){		
+		if(LaunchingResourceManager.isContextLaunchEnabled()) {
+			ILaunchGroup group = DebugUIPlugin.getDefault().getLaunchConfigurationManager().getLaunchGroup(getLaunchGroupId());
+			ContextRunner.getDefault().launch(group);
+			return;
+		}
+```
+
+## 运行程序
+
+`org.eclipse.debug.core.DebugPlugin` 提供了运行进程和包装进程的静态方法.
+
+```java
+	public static Process exec(String[] cmdLine, File workingDirectory, String[] envp) throws CoreException;
+	public static IProcess newProcess(ILaunch launch, Process process, String label, Map attributes);
+```
+
+在 `DebugPlugin.newProcess()` 方法上打断点, 
+可以跟踪到运行外部程序的功能在插件
+"org.eclipse.core.externaltools_1.0.200.v20130402-1741.jar"
+下的类
+`org.eclipse.core.externaltools.internal.launchConfigurations.ProgramLaunchDelegate`
+.
+一些常量, 包括运行配置属性的 key, 定义在类
+`org.eclipse.core.externaltools.internal.IExternalToolConstants`.
+主要配置有:
+
+```java
+	public static final String UI_PLUGIN_ID = "org.eclipse.ui.externaltools"; //$NON-NLS-1$;
+	public static final String ID_PROGRAM_LAUNCH_CONFIGURATION_TYPE = "org.eclipse.ui.externaltools.ProgramLaunchConfigurationType"; //$NON-NLS-1$
+
+	/**
+	 * Identifier for external tools launch configuration category. Launch
+	 * configuration types for external tools that appear in the external tools
+	 * launch configuration dialog should belong to this category.
+	 */
+	public static final String ID_EXTERNAL_TOOLS_LAUNCH_CATEGORY = "org.eclipse.ui.externaltools"; //$NON-NLS-1$
+
+	/**
+	 * String attribute identifying the location of an external. Default value
+	 * is <code>null</code>. Encoding is tool specific.
+	 */
+	public static final String ATTR_LOCATION = UI_PLUGIN_ID + ".ATTR_LOCATION"; //$NON-NLS-1$
+
+	/**
+	 * String attribute containing the arguments that should be passed to the
+	 * tool. Default value is <code>null</code>, and encoding is tool specific.
+	 */
+	public static final String ATTR_TOOL_ARGUMENTS = UI_PLUGIN_ID + ".ATTR_TOOL_ARGUMENTS"; //$NON-NLS-1$
+
+	/**
+	 * String attribute identifying the working directory of an external tool.
+	 * Default value is <code>null</code>, which indicates a default working
+	 * directory, which is tool specific.
+	 */
+	public static final String ATTR_WORKING_DIRECTORY = UI_PLUGIN_ID + ".ATTR_WORKING_DIRECTORY"; //$NON-NLS-1$
+```
+
+## eclipse 提供的基础服务
+
+* Platform, OS 类型等基础环境信息
+
+```java
+	// org.eclipse.debug.core.DebugPlugin
+	public static String[] parseArguments(String args) {
+		if (args == null)
+			return new String[0];
+		
+		if (Constants.OS_WIN32.equals(Platform.getOS()))
+			return parseArgumentsWindows(args);
+		
+		return parseArgumentsImpl(args);
+	}
+```
+
+* CoreException 异常
+
+```java
+	/**
+	 * Throws a core exception with an error status object built from
+	 * the given message, lower level exception, and error code.
+	 * @param message the status message
+	 * @param exception lower level exception associated with the
+	 *  error, or <code>null</code> if none
+	 * @param code error code
+	 */
+	protected static void abort(String message, Throwable exception, int code) throws CoreException {
+		throw new CoreException(new Status(IStatus.ERROR, IExternalToolConstants.PLUGIN_ID, code, message, exception));
+	}
+```
+
+* IStringVariableManager, 配置属性变量替换
+
+```java
+	private static IStringVariableManager getStringVariableManager() {
+		return VariablesPlugin.getDefault().getStringVariableManager();
+	}
+
+	public static IPath getWorkingDirectory(ILaunchConfiguration configuration) throws CoreException {
+		String location = configuration.getAttribute(IExternalToolConstants.ATTR_WORKING_DIRECTORY, (String) null);
+		if (location != null) {
+			String expandedLocation = getStringVariableManager().performStringSubstitution(location);
+	...
+	}
+```
+
+* DebugPlugin, 运行程序相关基础功能
+
+```java
+	// org.eclipse.debug.core.DebugPlugin
+	public static String[] parseArguments(String args);
+	public static Process exec(String[] cmdLine, File workingDirectory, String[] envp) throws CoreException;
+```
+
+```
+	// org.eclipse.core.externaltools.internal.launchConfigurations.ExternalToolsCoreUtil
+	public static String[] getArguments(ILaunchConfiguration configuration) throws CoreException {
+		String args = configuration.getAttribute(IExternalToolConstants.ATTR_TOOL_ARGUMENTS, (String) null);
+		if (args != null) {
+			String expanded = getStringVariableManager().performStringSubstitution(args);
+			return parseStringIntoList(expanded);
+		}
+		return null;
+	}
+```
+
+```java
+		// resolve arguments
+		String[] arguments = ExternalToolsCoreUtil.getArguments(configuration);
+		String[] envp = DebugPlugin.getDefault().getLaunchManager()
+				.getEnvironment(configuration);
+		Process p = DebugPlugin.exec(cmdLine, workingDir, envp);
+
+		Map processAttributes = new HashMap();
+		processAttributes.put(IProcess.ATTR_PROCESS_TYPE, programName);
+		IProcess process = DebugPlugin.newProcess(launch, p, location.toOSString(),
+				processAttributes);
+		if (p == null || process == null) {
+			if (p != null)
+				p.destroy();
+			throw new CoreException(new Status(IStatus.ERROR,
+					IExternalToolConstants.PLUGIN_ID,
+					IExternalToolConstants.ERR_INTERNAL_ERROR,
+					ExternalToolsProgramMessages.ProgramLaunchDelegate_4, null));
+		}
+		process.setAttribute(IProcess.ATTR_CMDLINE,
+				generateCommandLine(cmdLine));
+
+		// wait for process to exit
+		while (!process.isTerminated()) {
+			try {
+				if (monitor.isCanceled()) {
+					process.terminate();
+					break;
+				}
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+			}
+		}
+
+		// refresh resources
+		RefreshUtil.refreshResources(configuration, monitor);
+```
+
+* ResourcesPlugin 资源管理
+
+```java
+	public static IWorkspace getWorkspace();
+```
+
+```java
+IProject project= ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+```
 

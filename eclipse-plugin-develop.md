@@ -49,8 +49,43 @@ eclipse 默认是以 Tab 缩进,
 
 [[eclipse-plugin-develop/plugin-xml-edit.png]]
 
-## 
+## 学习其他插件
 
 开发 eclipse 插件最好的办法就是 "山寨",
 找一个功能类似的插件, 看看别人是怎么实现的, 然后依葫芦画瓢.
+
+## 三方库
+
+[eclipse orbit](http://eclipse.org/orbit/) 
+项目提供了一些可以在 eclipse 中使用的 3 方库的 bundle,
+如 logback.classic 二进制包和源码.
+从 orbit 下载页面, 
+如 [R20130827064939](http://download.eclipse.org/tools/orbit/downloads/drops/R20130827064939/),
+可以找到 update site 链接
+http://download.eclipse.org/tools/orbit/downloads/drops/R20130827064939/repository/
+,
+或者直接从页面链接下载.
+
+## 
+
+eclipse 运行环境和其他插件提供的很多功能, 服务和常量等, 
+直接使用类的静态方法, 静态成员暴露出来, 非常方便调用.
+如:
+
+```java
+IWorkbench org.eclipse.ui.PlatformUI.getWorkbench()
+void org.eclipse.debug.ui.DebugUITools.launch(ILaunchConfiguration configuration, String mode)
+org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME
+org.eclipse.debug.ui.IDebugUIConstants.ATTR_LAUNCH_IN_BACKGROUND
+```
+
+还有一些服务是需要实例调用的, 
+但是可以通过静态方法拿到对象实例.
+如:
+
+```java
+ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+
+```
+
 
