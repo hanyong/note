@@ -689,5 +689,92 @@ plus: 5 + 5 = 10
 plus: 3 + 10 = 13
 ```
 
+## 更可读的代码
+
+因为我们没有用 listener 相关的类, 
+antlr Tool 可以设置 "-no-listener" 参数, 
+不要产生 listener 相关类, 代码更加清爽.
+
+调试代码时发现 token 名字会直接作为自动生成代码中的常量定义,
+将语法文件中的字面量都定义一个 token 名字,
+可以产生更好读, 更易调试的代码.
+添加 token 定义后语法文件修改如下:
+
+```antlr
+grammar Plus;
+
+@parser::header {
+	import plus.PlusVm;
+}
+
+@parser::members {
+	PlusVm vm = new PlusVm();
+}
+
+expr: INT
+	{
+		vm.read($INT.text);
+	}
+	| x = list
+	;
+
+list: LIST_BEGIN PLUS expr expr LIST_END
+	{
+		vm.plus();
+	}
+	;
+
+INT: [0-9] ;
+LIST_BEGIN: '(' ;
+LIST_END: ')' ;
+PLUS: '+' ;
+WS: [ \t]+ -> skip ;
+EOL: ( '\r' '\n' ? | '\n' ) -> skip ;
+```
+
+修改前后自动生成代码对比如下.
+
+常量定义:
+
+```java
+	public static final int
+		T__2=1, T__1=2, T__0=3, INT=4, WS=5, EOL=6;
+```
+
+```java
+	public static final int
+		INT=1, LIST_BEGIN=2, LIST_END=3, PLUS=4, WS=5, EOL=6;
+```
+
+语法规则:
+
+```java
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(9); match(3);
+			setState(10); match(2);
+			setState(11); expr();
+			setState(12); expr();
+			setState(13); match(1);
+
+					vm.plus();
+				
+			}
+```
+
+```java
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(9); match(LIST_BEGIN);
+			setState(10); match(PLUS);
+			setState(11); expr();
+			setState(12); expr();
+			setState(13); match(LIST_END);
+
+					vm.plus();
+				
+			}
+```
+
 [grammars-v4]: https://github.com/antlr/grammars-v4
 
