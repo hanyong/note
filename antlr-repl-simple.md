@@ -393,5 +393,301 @@ plus: 2 + 10 = 12
 
 测试结果正确, 至此, 我们实现了 plus 解释器的功能.
 
+## 更友好的解释器
+
+测试上述解释器时发现一个问题,
+必须要输入结束才能看到结果,
+而更友好的方式我们希望边输入边执行,
+增量逐步执行和看到结果. 如输入:
+
+```clj
+(+ 
+	(+ 1 1)
+```
+
+后就应该看到 `1 + 1 = 2` 的结果,
+整个输入完再看到最后的 `2 + 10 = 12`.
+
+### 使用 `Unbuffered` 类, 增强交互性
+
+跟了一下 `ANTLRInputStream` 的代码,
+原来 `ANTLRInputStream` 一开始就尝试先读完整个输入流,
+才开始进行解析.
+这在编译时可以充分缓存文本, 提升性能.
+看了一下 `CharStream` 的实现类还有一个 `UnbufferedCharStream`,
+希望解释执行的场合应该使用这个类，
+将 `ANTLRInputStream` 换成 `UnbufferedCharStream`.
+同时将 `CommonTokenStream` 也换成 `UnbufferedTokenStream<Token>`.
+重新运行程序, 出现如下异常:
+
+```sh
+Exception in thread "main" java.lang.UnsupportedOperationException: Unbuffered stream cannot know its size
+	at org.antlr.v4.runtime.UnbufferedCharStream.size(UnbufferedCharStream.java:295)
+	at org.antlr.v4.runtime.CommonToken.getText(CommonToken.java:189)
+	at plus.g4.PlusParser.expr(PlusParser.java:82)
+```
+
+这个异常是在解释器解析 `INT` token 时, 
+调用 token 的 getText() 方法时产生的.
+跟踪到 `CommonToken.getText` 的代码如下:
+
+```java
+	@Override
+	public String getText() {
+		if ( text!=null ) {
+			return text;
+		}
+
+		CharStream input = getInputStream();
+		if ( input==null ) return null;
+		int n = input.size();
+		if ( start<n && stop<n) {
+			return input.getText(Interval.of(start,stop));
+		}
+		else {
+			return "<EOF>";
+		}
+	}
+```
+
+token 的 text 字段为空, 
+getText() 方法会尝试从输入流中去取 text.
+这时会调用 input.size() 方法,
+而非缓冲流不支持这个方法,
+因为非缓冲流尚未输入完成, 长度为知.
+
+这里我有两个疑问:
+* 既然 token 已经解析出来, 当前流的位置应该已经包含 token 文本,
+为什么还要检查 `(start<n && stop<n)` ?
+从代码猜测好像是有些特殊 token 在源码之外, 这时 text 返回 `"<EOF>"`.
+* token 已经解析出来了, 为什么没有设置 text 字段 ?
+难道在读取完 token 的文本前就能构造出 token (结果不是这样) ? 
+
+在 CommonToken 的所有构造函数上打断点, 
+看看 token 是如何识别和构造出来的.
+跟踪到 `CommonTokenFactory` 的代码,
+创建 token 后要根据 `copyText` 设置决定是否立即为 token 设置 text.
+
+```java
+	@Override
+	public CommonToken create(Pair<TokenSource, CharStream> source, int type, String text,
+							  int channel, int start, int stop,
+							  int line, int charPositionInLine)
+	{
+		CommonToken t = new CommonToken(source, type, channel, start, stop);
+		t.setLine(line);
+		t.setCharPositionInLine(charPositionInLine);
+		if ( text!=null ) {
+			t.setText(text);
+		}
+		else if ( copyText && source.b != null ) {
+			t.setText(source.b.getText(Interval.of(start,stop)));
+		}
+
+		return t;
+	}
+```
+
+而默认的 `CommonTokenFactory.DEFAULT` 出于性能考虑默认设置了 copyText 为 false.
+但用户可以手动创建工厂设置 copyText 为 true.
+
+```java
+	/**
+	 * ... ...
+	 * <p>
+	 * The default value is {@code false} to avoid the performance and memory
+	 * overhead of copying text for every token unless explicitly requested.</p>
+	 */
+	protected final boolean copyText;
+
+	/**
+	 * ... ...
+	 * When {@code copyText} is {@code false}, the {@link #DEFAULT} instance
+	 * should be used instead of constructing a new instance.</p>
+	 *
+	 * @param copyText The value for {@link #copyText}.
+	 */
+	public CommonTokenFactory(boolean copyText) { this.copyText = copyText; }
+```
+
+一些 token 在识别出其抽象意义后, 确实没必要保留原始文本, 
+如 "(", ")" 和 "if", "while" 等控制结构.
+antlr 的做法是明确需要原始文本时, 再回原始输入流去找.
+但我们的解释器不符合这类场景:
+* LISP 语法很紧凑, 其实很多 token 文本都是有意义的, 值得保留.
+* 边输入边执行时效率要求不高. 输入没有完全缓存, 不能回原始文本去找.
+
+一开始的想法是看 antlr 能不能针对特定 token 保留 text,
+从代码上看没有这样的机制, 完全由一个 copyText 决定,
+即使有这样的机制也太复杂.
+既然 `CommonTokenFactory` 支持用户创建工厂, 
+看了下 `Lexer` 类也有个公共的 `setTokenFactory` 方法,
+先试试看手动创建替换默认工厂.
+修改后的代码如下:
+
+```java
+package plus;
+
+import org.antlr.v4.runtime.CommonTokenFactory;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.UnbufferedCharStream;
+import org.antlr.v4.runtime.UnbufferedTokenStream;
+
+import plus.g4.PlusLexer;
+import plus.g4.PlusParser;
+
+public class Plus {
+
+	public static void main(String[] args) throws Exception {
+		PlusLexer lexer = new PlusLexer(new UnbufferedCharStream(System.in));
+		CommonTokenFactory tokenFactory = new CommonTokenFactory(true);
+		lexer.setTokenFactory(tokenFactory);
+		PlusParser parser = new PlusParser(new UnbufferedTokenStream<Token>(lexer));
+		parser.expr();
+	}
+
+}
+```
+
+运行结果如下:
+
+```sh
+(+
+	(+ 1 2)
+read int: 1
+read int: 2
+(+ 5 5)
+plus: 1 + 2 = 3
+read int: 5
+read int: 5
+)
+plus: 5 + 5 = 10
+plus: 3 + 10 = 13
+```
+
+结果还是有问题, `(+ 1 2)` 输入后没有被立即执行.
+多次测试后发现解释器总是会慢一拍, 
+下一个 token 输入后, 上一条语句才被执行.
+
+### 立即执行已输入的语句
+
+调试了一下代码, 
+解析器会在语法 match 后再调用 action, 
+代码片段 (语法文件自动生成的代码) 如下:
+
+```java
+			case INT:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(4); ((ExprContext)_localctx).INT = match(INT);
+
+						vm.read((((ExprContext)_localctx).INT!=null?((ExprContext)_localctx).INT.getText():null));
+					
+				}
+```
+
+解析器 `org.antlr.v4.runtime.Parser` 的 `match` 方法检查类型正确后会调用 `consume()` 方法,
+代码片段如下:
+
+```java
+	@NotNull
+	public Token match(int ttype) throws RecognitionException {
+		Token t = getCurrentToken();
+		if ( t.getType()==ttype ) {
+			_errHandler.reportMatch(this);
+			consume();
+		}
+		else {
+			... ... error handing
+		}
+		return t;
+	}
+```
+
+解析器的 consume() 方法调用到 token stream 的 consume() 方法,
+`UnbufferedTokenStream.consume()` 调用了 `sync(1)`, 
+尝试读入下一个 token (预读?).
+
+```java
+	public void consume() {
+		... ...
+		sync(1);
+	}
+```
+
+结果要下一个 token 读入后, 当前语句才会被执行.
+
+我们希望输入一行命令, 即回车后,
+已输入的命令就应该立即被执行.
+立即想到, 可以将当前被忽略的回车作为一个额外的 token 输入.
+但回车 token 破坏了现有的语法结构,
+除非在现在语法的任意 token 间都添加任意的回车 token,
+这显然不合理.
+能不能让 token stream 将 token 传递给解析器时, 
+过滤掉回车 token, 从而不影响语法解析.
+尝试看一下从 token stream 取 token 的方法, 
+有 `get`, `LT` 两个方法, 修改似乎比较麻烦.
+
+另一种思路是尝试修改 token stream 的 consume() 方法去掉 `sync(1)` 操作,
+token stream 可以在明确被请求 token 时再执行 `sync` 操作,
+但看 antlr 代码也不好直接修改, 再考虑其他方案.
+
+跟了一下 sync 的代码, 直接调了 fill() 方法.
+
+```java
+	protected void sync(int want) {
+		int need = (p+want-1) - n + 1; // how many more elements we need?
+		if ( need > 0 ) {
+			fill(need);
+		}
+	}
+```
+
+fill() 方法如下:
+
+```java
+	protected int fill(int n) {
+		for (int i=0; i<n; i++) {
+			if (this.n > 0 && tokens[this.n-1].getType() == Token.EOF) {
+				return i;
+			}
+
+			Token t = tokenSource.nextToken();
+			add(t);
+		}
+
+		return n;
+	}
+```
+
+本想修改 add() 方法跳过 NewLine token, 但这样破坏了 fill() 的返回值.
+
+语法定义没有 skip EOL, 又在 token stream 中 skip 掉,
+是一种 hack 手段, 也破坏了语法定义的通用性, 这个办法也不合理.
+最好的办法是让 stream 和分词器合作,
+EOL 要 skip 掉, 但如果最后一个 token 是 EOL, consume 时就不要 sync 了.
+
+调试读入空白 token 时, 回车也不能结束 token, 一定要输入其他非空白字符.
+所以独立 EOL token 还有个好处, 可以用回车来结束任意 token.
+
+综合权衡, 还是尝试修改 stream 在 consume 时去掉 sync.
+新建类 `InterpreterTokenStream` 继承 `UnbufferedTokenStream<Token>`,
+复制 consume 方法, 注释掉 sync 一行.
+修改后执行结果如下, 满足了我们期望的效果:
+
+```sh
+(+
+	(+ 1 2)
+read int: 1
+read int: 2
+plus: 1 + 2 = 3
+	(+ 5 5)
+read int: 5
+read int: 5
+plus: 5 + 5 = 10
+	)
+plus: 3 + 10 = 13
+```
+
 [grammars-v4]: https://github.com/antlr/grammars-v4
 
