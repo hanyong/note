@@ -179,7 +179,129 @@ WS: [ \t\r\n]+ -> skip
 
 ## 编程方式使用解析器
 
+查看产生的解析器 `PlusParser` 源码, 
+每条语法规则对应一个同名的解析对应语法的函数.
+编程方式使用解析器代码示例 "Plus.java" 如下:
 
+```java
+package plus;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+
+import plus.g4.PlusLexer;
+import plus.g4.PlusParser;
+
+public class Plus {
+
+	public static void main(String[] args) throws Exception {
+		PlusLexer lexer = new PlusLexer(new ANTLRInputStream(System.in));
+		PlusParser parser = new PlusParser(new CommonTokenStream(lexer));
+		parser.expr();
+	}
+
+}
+```
+
+运行程序, 将在标准输入接受输入, 如果有语法错误将会提示,
+否则跟之前的情形一样, 什么也不做...
+
+## 将语句映射到行为
+
+antlr 只能帮你到这里了.
+antlr 已经帮你解析出语法, 得到一条条语句, 
+但是每条语句是什么意思, 要执行什么动作, 就要由我们来定义了.
+antlr 提供了两种方式实现将语句映射到行为上, 
+一种是 Actions, 类似解析 XML 时的 SAX, 
+一种抽象语法树 ast, 类似解析 XML 时的 DOM.
+对解释器而言, 我们当然希望边输入边执行, 当然第一种方式更适合.
+
+antlr 对 actions 的支持简单而直接, 
+直接在语法定义文件中插入 java 代码.
+在定义语句的地方用 java 写出该语句要执行什么操作, 即定义语义.
+文档参考: https://theantlrguy.atlassian.net/wiki/display/ANTLR4/Actions+and+Attributes
+
+如 list 语法定义:
+
+```antlr
+list: '(' '+' expr expr ')'
+	;
+```
+
+可以直接在 list 语句下定义该语句要执行的操作:
+
+```antlr
+list: '(' '+' expr expr ')'
+	{
+		System.out.println("find list");
+	}
+	;
+```
+
+expr 是 INT 语句或 list 语句:
+
+```antlr
+expr: INT
+	| list
+	;
+```
+
+可以在每条语句下写出该语句要执行的操作:
+
+```antlr
+expr: INT
+	{
+		System.out.println("find expr int");
+	}
+	| list
+	{
+		System.out.println("find expr list");
+	}
+	;
+```
+
+编写 Actions 时, 还可以直接根据 token 名字访问 token 对象.
+语句不能直接通过名字访问, 必须定义别名.
+并且只能访问语句的属性, 不能访问语句对象本身.
+token 也可以定义别名访问, 
+这样同一语句中重复出现的 token 可以通过不同的别名区分.
+"Plus.g4" 添加简单行为定义后完整代码如下:
+
+```antlr
+grammar Plus;
+
+expr: INT
+	{
+		System.out.println("found expr int: " + $INT.text);
+	}
+	| x = list
+	{
+		System.out.println("found expr list: " + $x.text);
+	}
+	;
+
+list: '(' '+' a = expr b = expr ')'
+	{
+		System.out.printf("found list: %s + %s\n", $a.text, $b.text);
+	}
+	;
+
+INT: [0-9]
+	;
+
+WS: [ \t\r\n]+ -> skip
+	;
+```
+
+重新生成解析器后再运行 Plus 解释器, 输入 `(+ 1 2)`, 可看到如下输出:
+
+```sh
+(+ 1 2)
+found expr int: 1
+found expr int: 2
+found list: 1 + 2
+found expr list: (+12)
+```
 
 [grammars-v4]: https://github.com/antlr/grammars-v4
 
