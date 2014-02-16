@@ -303,5 +303,102 @@ found list: 1 + 2
 found expr list: (+12)
 ```
 
+## 解释器
+
+就像直接在 JSP 页面中写 java 代码一样, 
+直接在语法文件中写 java 代码看起来不是一个好办法.
+模仿 MVC 的思路, 
+应该考虑在独立的 java 代码中完成解释器的主要工作.
+如上定义的加法器, 可以通过一个简单的堆栈机 "PlusVm" 实现,
+提供 `read`, `plus` 两条指令在语法文件中调用即可.
+
+```java
+package plus;
+
+import java.util.ArrayDeque;
+
+public class PlusVm {
+
+	private ArrayDeque<Integer> stack = new ArrayDeque<>();
+
+	public void read(String s) {
+		int n = Integer.parseInt(s);
+		stack.addLast(n);
+		System.out.println("read int: " + n);
+	}
+
+	public void plus() {
+		int b = stack.removeLast();
+		int a = stack.removeLast();
+		int c = a + b;
+		stack.addLast(c);
+		System.out.printf("plus: %d + %d = %d\n", a, b, c);
+	}
+
+}
+```
+
+语法文件可以通过 `@header` action 添加 import 语句,
+通过 `@members` action 为 parser 添加 vm 成员,
+然后在语句 action 中添加对 vm 的简单调用即可.
+
+```antlr
+grammar Plus;
+
+@parser::header {
+	import plus.PlusVm;
+}
+
+@parser::members {
+	PlusVm vm = new PlusVm();
+}
+
+expr: INT
+	{
+		vm.read($INT.text);
+	}
+	| x = list
+	;
+
+list: '(' '+' expr expr ')'
+	{
+		vm.plus();
+	}
+	;
+
+INT: [0-9]
+	;
+
+WS: [ \t\r\n]+ -> skip
+	;
+```
+
+重新编译运行, 执行结果如下:
+
+```sh
+(+ 1 2)
+read int: 1
+read int: 2
+plus: 1 + 2 = 3
+```
+
+之前定义的语法测试输入执行结果:
+
+```sh
+(+
+	(+ 1 1)
+	(+ 5 5)
+	)
+read int: 1
+read int: 1
+plus: 1 + 1 = 2
+read int: 5
+read int: 5
+plus: 5 + 5 = 10
+plus: 2 + 10 = 12
+```
+
+测试结果正确, 至此, 我们实现了 plus 解释器的功能.
+
 [grammars-v4]: https://github.com/antlr/grammars-v4
 
