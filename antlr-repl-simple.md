@@ -208,27 +208,20 @@ public class Plus {
 
 ## 将语句映射到行为
 
-antlr 只能帮你到这里了.
-antlr 已经帮你解析出语法, 得到一条条语句, 
-但是每条语句是什么意思, 要执行什么动作, 就要由我们来定义了.
-antlr 提供了两种方式实现将语句映射到行为上, 
-一种是 Actions, 类似解析 XML 时的 SAX, 
-一种抽象语法树 ast, 类似解析 XML 时的 DOM.
+antlr 实现了语法解析, 得到一条条语句, 
+但 antlr 只能帮你到这里了,
+每条语句是什么意思, 要执行什么动作, 就要由我们来定义了.
+antlr 提供两种方式将语句映射到行为上, 
+类似解析 XML 时的 SAX 方式和 DOM 方式,
+antlr 支持 Actions 和 抽象语法树 ast 两种方式.
 对解释器而言, 我们当然希望边输入边执行, 当然第一种方式更适合.
 
 antlr 对 actions 的支持简单而直接, 
 直接在语法定义文件中插入 java 代码.
-在定义语句的地方用 java 写出该语句要执行什么操作, 即定义语义.
+在定义语句的地方, 直接用 java 写出该语句要执行什么操作, 即定义语义.
 文档参考: https://theantlrguy.atlassian.net/wiki/display/ANTLR4/Actions+and+Attributes
 
-如 list 语法定义:
-
-```antlr
-list: '(' '+' expr expr ')'
-	;
-```
-
-可以直接在 list 语句下定义该语句要执行的操作:
+如可以直接在 list 语句下定义该语句要执行的操作:
 
 ```antlr
 list: '(' '+' expr expr ')'
@@ -246,7 +239,7 @@ expr: INT
 	;
 ```
 
-可以在每条语句下写出该语句要执行的操作:
+每条语句下可分别写出该语句要执行的操作:
 
 ```antlr
 expr: INT
@@ -264,8 +257,8 @@ expr: INT
 语句不能直接通过名字访问, 必须定义别名.
 并且只能访问语句的属性, 不能访问语句对象本身.
 token 也可以定义别名访问, 
-这样同一语句中重复出现的 token 可以通过不同的别名区分.
-"Plus.g4" 添加简单行为定义后完整代码如下:
+同一语句中重复出现的 token 可以用不同的别名区分.
+"Plus.g4" 添加简单行为定义后代码如下:
 
 ```antlr
 grammar Plus;
@@ -305,12 +298,14 @@ found expr list: (+12)
 
 ## 解释器
 
-就像直接在 JSP 页面中写 java 代码一样, 
-直接在语法文件中写 java 代码看起来不是一个好办法.
+就像不推荐直接在 JSP 页面中写 java 代码一样, 
+直接在语法文件中写 java 代码也不是一个好办法.
 模仿 MVC 的思路, 
-应该考虑在独立的 java 代码中完成解释器的主要工作.
+可以考虑在独立的 java 文件中完成解释器的主要工作,
+提供简单接口在语法文件中调用.
+
 如上定义的加法器, 可以通过一个简单的堆栈机 "PlusVm" 实现,
-提供 `read`, `plus` 两条指令在语法文件中调用即可.
+提供 `read`, `plus` 两条指令.
 
 ```java
 package plus;
@@ -338,9 +333,9 @@ public class PlusVm {
 }
 ```
 
-语法文件可以通过 `@header` action 添加 import 语句,
+语法文件通过 `@header` action 添加 import 语句,
 通过 `@members` action 为 parser 添加 vm 成员,
-然后在语句 action 中添加对 vm 的简单调用即可.
+然后在语法 action 中添加对 vm 的简单调用即可.
 
 ```antlr
 grammar Plus;
@@ -381,8 +376,6 @@ read int: 1
 read int: 2
 plus: 1 + 2 = 3
 ```
-
-之前定义的语法测试输入执行结果:
 
 ```sh
 (+
