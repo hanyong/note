@@ -251,10 +251,10 @@ antlr 支持 Actions 和 抽象语法树 ast 两种方式.
 
 antlr 对 actions 的支持简单而直接, 
 直接在语法定义文件中插入 java 代码.
-在定义语句的地方, 直接用 java 写出该语句要执行什么操作, 即定义语义.
 文档参考: https://theantlrguy.atlassian.net/wiki/display/ANTLR4/Actions+and+Attributes
 
-如可以直接在 list 语句下定义该语句要执行的操作:
+可以在语句定义的任何地方直接插入代码块, 
+用 java 写出识别到该语句时要执行什么操作, 即定义语义.
 
 ```antlr
 list: '(' '+' expr expr ')'
@@ -286,11 +286,20 @@ expr: INT
 	;
 ```
 
-编写 Actions 时, 还可以直接根据 token 名字访问 token 对象.
-语句不能直接通过名字访问, 必须定义别名.
-并且只能访问语句的属性, 不能访问语句对象本身.
-token 也可以定义别名访问, 
+编写 Actions 时, 可以直接根据 token 名字访问 token 对象.
+也可以定义别名访问, 
 同一语句中重复出现的 token 可以用不同的别名区分.
+使用语句报名访问语句时 antlr 插件会报错, 但实际是可以访问的 (bug?).
+可以设置别名访问语句避免 antlr 插件报错.
+访问语句时只能用访问属性的语法, 否则会报类似如下错误:
+
+```sh
+error(67): Lisping.g4:17:22: missing attribute access on rule reference 'expr' in '$expr'
+```
+
+可以用语句的 "ctx" 属性访问语句本身, 如 `$expr.ctx`.
+当前语句可直接用 `$ctx` 访问, 当前语句的属性可直接用 `$attr` 访问, 如 `$start`.
+
 "Plus.g4" 添加简单行为定义后代码如下:
 
 ```antlr
