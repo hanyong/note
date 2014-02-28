@@ -38,6 +38,39 @@ antlr 的使用方式很简单, 写一个语法定义文件 "Somelang.g4",
 生成目录修改为 "src/main/java",
 取消勾选 "Mark generated files as derived" 选项.
 
+>后来发现 antlr eclipse 插件有点问题, 
+* 生成目录总是被设置为 "Derived" (bug?), 生成目录是手动管理的正规目录时有问题,
+* git 仓库下总是自动产生一个 ".gitignore" 文件,
+
+>非常烦人.
+较好的办法还是设置一个不手动管理的目录, 如 "src/generated/java",
+再用 "build-helper-maven-plugin" 插件及配套 eclipse 插件
+(可在 [m2e-extras](http://repository.sonatype.org/content/repositories/forge-sites/m2e-extras/0.15.0/N/0.15.0.201206251206/) 找到)
+将自动生成目录添加到项目 source.
+
+>
+```xml
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>src/generated/java</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+```
+
 ## 词法分析与语法解析
 
 编译原理上有两个概念, "词法分析" 和 "语法解析", 
