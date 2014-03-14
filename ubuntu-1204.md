@@ -115,7 +115,11 @@ sudo aptitude install dconf-tools
 
 ```sh
 sudo aptitude install avant-window-navigator
+sudo aptitude install libdesktop-agnostic-cfg-gconf
 ```
+
+安装 `libdesktop-agnostic-cfg-gconf` 避免 dock 启动时出现一个讨厌的绿色 "+" 号,
+参考: https://bugs.launchpad.net/awn/+bug/990774.
 
 运行 "avant-window-navigator".
 首选项取消 "扩展面板", 位置设置为左边, 勾选 "Start Awn automatically".
