@@ -128,8 +128,40 @@ sudo aptitude install libdesktop-agnostic-cfg-gconf
 "Cairo Main Menu" 旁边带的 "Places" 上右键选择 "Remove Icon" 去掉这个图标.
 "Advanced" 设置 "Offset" 为 "8".
 
+>"Cairo Main Menu" 菜单有些功能失效了, 没有 "注销" 和 "关机",
+可以尝试装 `awn-applet-yama`, yama 有时会崩溃.
+yama 默认的图标颜色太浅, 
+可修改文件 `/usr/share/avant-window-navigator/applets/yama/yama.py` 
+修改 `applet_logo` 更换图标, 如改为 `/usr/share/icons/gnome/scalable/places/ubuntu-logo.svg`.
+
 ### gedit
 
 "编辑" -> "首选项", "查看", 勾选 "显示行号", 取消 "启用自动换行".
 "编辑器" "字表符宽度" 设置为 "4", 取消 "在保存前创建备份文件".
+
+### 安装 vim
+
+```sh
+sudo aptitude install vim vim-gnome
+```
+
+>需要安装 `vim-gnome` 后才能简单在 vim 中复制内容到 gnome 剪贴板.
+
+打开 `$VIM/vim73` 目录下的 `vimrc_example.vim`, 确认关闭 `backup`.
+编辑文件注释掉 `nobackup`, 保存到 `~/.vimrc`.
+
+```sh
+:e /usr/share/vim/vim73/vimrc_example.vim
+:set backup!
+:w ~/.vimrc
+```
+
+可以将需要修改的通用设置保存到 `/etc/vim/vim.local` 全局修改.
+`nobackup` 必须改 `~/.vimrc` 文件, 否则全局修改会被 `~/.vimrc` 覆盖.
+
+```vim
+set ts=4 sw=4 nu
+set nobackup
+set bdir=~/tmp,/tmp,.
+```
 
