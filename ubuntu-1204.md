@@ -165,3 +165,14 @@ set nobackup
 set bdir=~/tmp,/tmp,.
 ```
 
+### 连接公司 VPN
+
+安装 openconnect.
+
+```sh
+sudo aptitude install network-manager-openconnect-gnome
+```
+
+配置 VPN, 只需要在 "网关" 输入公司 VPN 地址, 不需要 "https://" 前缀.
+点连接, 输入用户名, 密码即可登陆成功.
+
