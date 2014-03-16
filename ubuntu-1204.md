@@ -72,13 +72,17 @@ sudo aptitude remove overlay-scrollbar liboverlay-scrollbar3-0.2-0 liboverlay-sc
 
 ### 安装 gnome2 桌面
 
-安装 `gnome-session-fallback`.
+安装 `gnome-panel`.
 
 ```sh
-sudo aptitude install gnome-session-fallback
+sudo aptitude install gnome-panel
 ```
 
-注销或重启, 登陆界面选择 "Gnome classic" 进入系统.
+注销或重启, 登陆界面选择 "GNOME Classic (No effects)" 进入系统.
+
+**UPDATE**: https://help.ubuntu.com/community/PreciseGnomeClassicTweaks
+后来发现这篇文章, 里面介绍安装 `gnome-panel` 比 `gnome-session-fallback` 好.
+其他设置说明推荐参考这篇文章.
 
 ### 关闭按钮调到菜单栏右边
 
