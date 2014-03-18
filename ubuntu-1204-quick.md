@@ -9,6 +9,7 @@ sudo apt-get update
 sudo apt-get install -y aptitude
 sudo aptitude install -y dconf-tools
 sudo aptitude install -y gconf-editor
+sudo aptitude install -y realpath
 
 # git
 sudo add-apt-repository -y ppa:git-core/ppa
@@ -69,6 +70,7 @@ chmod 400 ~/.ssh/id_rsa
 ```sh
 git config --global user.name hanyong
 git config --global user.email observer.hany@alibaba-inc.com
+git config --global push.default simple
 ```
 
 ## gnome classic
