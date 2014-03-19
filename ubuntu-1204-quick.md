@@ -169,3 +169,10 @@ awn 设置好后删除底面板上的 "task list".
 sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim73/vimrc_example.vim > ~/.vimrc
 ```
 
+## bcompare
+
+官网 http://www.scootersoftware.com/download.php 下载 Debian 包, 双击安装.
+(注: 使用默认推荐的 32 位包, 旧 64 位包会导致安装一堆 32 位兼容软件包).
+
+官网上下载附加格式支持包, "Tools" -> "Import Settings...", 选择需要导入支持的格式.
+
