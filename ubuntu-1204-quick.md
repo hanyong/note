@@ -11,9 +11,15 @@ sudo aptitude install -y dconf-tools
 sudo aptitude install -y gconf-editor
 sudo aptitude install -y realpath
 
+sudo mkdir -p /home/local/
+sudo chown $USER:$USER /home/local/
+mkdir -p /home/local/bin/
+
 # git
 sudo add-apt-repository -y ppa:git-core/ppa
 sudo aptitude install -y git gitk git-cola
+sudo chmod +x /usr/share/doc/git/contrib/workdir/git-new-workdir
+ln -sf /usr/share/doc/git/contrib/workdir/git-new-workdir /home/local/bin/
 
 # gnome classic
 sudo aptitude remove -y indicator-appmenu
