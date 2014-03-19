@@ -70,6 +70,8 @@ chmod 400 ~/.ssh/id_rsa
 ```sh
 git config --global user.name hanyong
 git config --global user.email observer.hany@alibaba-inc.com
+git config --global diff.tool bc3
+git config --global merge.tool bc3
 git config --global push.default simple
 ```
 
