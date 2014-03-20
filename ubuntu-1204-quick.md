@@ -28,6 +28,9 @@ sudo aptitude install -y gnome-panel
 sudo aptitude install -y indicator-applet indicator-applet-session
 #注销, 登陆界面选择 "GNOME Classic (No effects)" 进入系统.
 
+# 其他工具
+sudo aptitude install -y gnome-color-chooser
+
 # awn dock.
 sudo aptitude install -R -y avant-window-navigator awn-settings libdesktop-agnostic-cfg-gconf
 #`-R` 避免安装一堆用不着的 awn 推荐依赖. 
@@ -108,6 +111,13 @@ gsettings set com.canonical.indicator.datetime show-calendar false
 gsettings set com.canonical.indicator.datetime show-clock false
 gsettings set com.canonical.indicator.datetime show-events false
 ```
+
+* 提示框颜色
+
+运行 `gnome-color-chooser`, "特定的" tab,
+"小提示" 选中修改 "前景" 和 "背景", 颜色值不用设, 默认的就好, 点 "应用", 然后 "关闭".
+
+这个会影响 eclipse 和 firefox 的提示框颜色, firefox 可能要重启下. 设置后提示框都变漂亮了.
 
 ## firefox
 
