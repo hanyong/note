@@ -50,6 +50,22 @@ EOF
 
 ## 个人
 
+## inputrc
+
+```sh
+cat <<'EOF' > ~/.inputrc
+$include /etc/inputrc
+
+# mappings for Ctrl-left-arrow and Ctrl-right-arrow for word moving
+"\e[1;5C": forward-word
+"\e[1;5D": backward-word
+
+# Control-Up, Control-Down
+"\e[1;5A": history-search-backward
+"\e[1;5B": history-search-forward
+EOF
+```
+
 ## gedit
 
 "编辑" -> "首选项".
