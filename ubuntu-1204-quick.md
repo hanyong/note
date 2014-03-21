@@ -31,6 +31,7 @@ sudo aptitude install -y indicator-applet indicator-applet-session
 # 其他工具
 sudo aptitude install -y gnome-color-chooser
 sudo aptitude install -y tree
+sudo aptitude install -y unrar
 
 # awn dock.
 sudo aptitude install -R -y avant-window-navigator awn-settings libdesktop-agnostic-cfg-gconf
