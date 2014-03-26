@@ -68,11 +68,15 @@ EOF
 
 ## gedit
 
-"编辑" -> "首选项".
-* "查看" tab, 勾选 "显示行号", 取消 "启用自动换行".
-* "编辑器" tab, "制表符宽度" 修改为 "4", 取消 "在保存前创建备份文件".
-
 ```sh
+# "编辑" -> "首选项".
+# "查看" tab, 勾选 "显示行号", 取消 "启用自动换行".
+gsettings set org.gnome.gedit.preferences.editor display-line-numbers true
+gsettings set org.gnome.gedit.preferences.editor wrap-mode none
+# "编辑器" tab, "制表符宽度" 修改为 "4", 取消 "在保存前创建备份文件".
+gsettings set org.gnome.gedit.preferences.editor tabs-size 4
+gsettings set org.gnome.gedit.preferences.editor create-backup-copy false
+
 # 显示文件末尾换行符
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
 gsettings set org.gnome.gedit.preferences.editor ensure-trailing-newline false
