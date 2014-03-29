@@ -1,6 +1,119 @@
 ubuntu 12.04
 ===
 
+## 安装
+
+下载光盘镜像, 将光盘镜像下 `/casper/{vmlinuz,initrd}*` 两个文件解压出来.
+
+```sh
+├── ubuntu-12.04.4-desktop-amd64.iso
+└── ubuntu-12.04.4-desktop-amd64/
+    └── casper/
+        ├── initrd.lz
+        └── vmlinuz.efi
+```
+
+使用 "Grub 4 DOS" (或 EasyBCD) 启动安装镜像.
+启动配置如下:
+
+```sh
+title Ubuntu 12.04.4 LiveCD
+find --set-root /home/software/linux/ubuntu-12.04.4-desktop-amd64.iso
+kernel /home/software/linux/ubuntu-12.04.4-desktop-amd64/casper/vmlinuz.efi boot=casper iso-scan/filename=/home/software/linux/ubuntu-12.04.4-desktop-amd64.iso
+initrd /home/software/linux/ubuntu-12.04.4-desktop-amd64/casper/initrd.lz
+```
+
+重启进入 LiveCD 桌面后执行下列命令卸载镜像挂载分区:
+
+```sh
+sudo umount -l /isodevice/
+```
+
+运行安装程序, 语言选择中文, 手动设置分区, 完成安装.
+
+### 设置 lvm 分区
+
+安装系统前可以参考 [UbuntuDesktopLVM][] 设置 lvm 逻辑卷.
+
+```sh
+# 准备一个启动分区和一个物理卷分区.
+# 在我的机器上分别是主分区 `/dev/sda3` 和逻辑分区 `/dev/sda5`.
+BOOT_DEV="/dev/sda3"
+PV_DEV="/dev/sda5"
+
+# LiveCD 安装 lvm2.
+# 安装完有一个内核镜像 (LiveCD 只读镜像) 不能修改的错误, 请忽略.
+sudo aptitude install -y lvm2
+
+# 创建物理卷
+sudo pvcreate "${PV_DEV}"
+
+# 创建 lvm 卷组
+sudo vgcreate vg "${PV_DEV}"
+#             ^     ^
+#            name   PV
+
+# 创建逻辑卷
+sudo lvcreate -L 20G -n lvroot vg
+#                 ^       ^    ^
+#                size    name  VG
+sudo lvcreate -L 50G -n lvhome vg
+sudo lvcreate -L 10G -n lvopt vg
+sudo lvcreate -L 5G -n lvswap vg
+# 查看逻辑卷
+sudo lvdisplay
+
+# 在逻辑卷上创建文件系统
+sudo mkfs.ext4 /dev/mapper/vg-lvroot
+sudo mkfs.ext4 /dev/mapper/vg-lvhome
+sudo mkfs.ext4 /dev/mapper/vg-lvopt
+sudo mkswap -f /dev/mapper/vg-lvswap
+```
+
+手动分区时设置创建好的逻辑卷作为安装分区.
+
+**注意**: 
+* 启动程序 (如 grub) 不能识别逻辑卷, `/boot` 必须挂载在非逻辑卷 `${BOOT_DEV}` 上.
+* Desktop 默认内核没有安装逻辑卷功能, 安装完系统后不能立即重启, 
+按下列操作为安装后的系统安装 lvm2.
+
+```sh
+# 挂载安装后的系统
+sudo mount /dev/mapper/vg-lvroot /mnt
+sudo mount /dev/mapper/vg-lvhome /mnt/home
+sudo mount /dev/mapper/vg-lvopt /mnt/opt
+sudo mount "${BOOT_DEV}" /mnt/boot
+# chroot 过去
+sudo chroot /mnt
+```
+
+**注意**: 
+* 下列操作在 chroot 之后的终端环境下执行, **跟上述操作不能在一个脚本里执行**.
+* chroot 后当前用户是 root.
+
+```sh
+# OPTIONAL: Load LVM modules on startup 
+cat <<EOF | tee -a /etc/modules >> /etc/initramfs-tools/modules
+dm-mod
+dm-snapshot
+dm-mirror
+EOF
+
+# 安装 lvm2
+aptitude install -y lvm2
+```
+
+>如果没有安装 lvm2 系统将无法启动. 
+LiveCD 默认也不支持 lvm, 重启到 LiveCD 安装 lvm2 后也不能自动识别出已创建的 lvm 卷.
+测试发现执行一次 `vgexport` 后再执行一次 `vgimport`, 就会识别到已有的 lvm 卷了.
+
+>```sh
+# 重启到 LiveCD 后执行下列操作.
+sudo apt-get install -y lvm2
+sudo vgexport -a
+sudo vgimport -a
+```
+
 ## 全局
 
 ```sh
@@ -223,3 +336,6 @@ sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim73/vimrc_example.vim > ~/.
 (注: 使用默认推荐的 32 位包, 旧 64 位包会导致安装一堆 32 位兼容软件包).
 
 官网上下载附加格式支持包, "Tools" -> "Import Settings...", 选择需要导入支持的格式.
+
+[UbuntuDesktopLVM]: https://help.ubuntu.com/community/UbuntuDesktopLVM
+
