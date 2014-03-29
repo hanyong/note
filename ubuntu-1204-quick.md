@@ -135,6 +135,9 @@ sudo chmod +x /usr/share/doc/git/contrib/workdir/git-new-workdir
 ln -sf /usr/share/doc/git/contrib/workdir/git-new-workdir /home/local/bin/
 
 # gnome classic
+# https://help.ubuntu.com/community/PreciseGnomeClassicTweaks
+# 这篇文章介绍安装 `gnome-panel` 比 `gnome-session-fallback` 好.
+# 其他设置说明推荐参考这篇文章.
 sudo aptitude remove -y indicator-appmenu
 sudo aptitude remove -y overlay-scrollbar liboverlay-scrollbar3-0.2-0 liboverlay-scrollbar-0.2-0
 sudo aptitude install -y gnome-panel
@@ -147,11 +150,13 @@ sudo aptitude install -y tree
 sudo aptitude install -y unrar
 
 # awn dock.
-sudo aptitude install -R -y avant-window-navigator awn-settings libdesktop-agnostic-cfg-gconf
 #`-R` 避免安装一堆用不着的 awn 推荐依赖. 
-#`libdesktop-agnostic-cfg-gconf` 避免显示绿加号的 bug.
+# 安装 `libdesktop-agnostic-cfg-gconf` 避免 dock 启动时出现一个讨厌的绿色 "+" 号,
+# 参考: https://bugs.launchpad.net/awn/+bug/990774.
+sudo aptitude install -R -y avant-window-navigator awn-settings libdesktop-agnostic-cfg-gconf
 
 # vim
+# 需要安装 `vim-gnome` 后才能简单在 vim 中复制内容到 gnome 剪贴板.
 sudo aptitude install -y vim vim-gnome
 sudo tee /etc/vim/vimrc.local <<EOF
 set ts=4 sw=4 nu
@@ -159,9 +164,23 @@ set nobackup
 set backupdir=~/tmp,/tmp,.
 EOF
 #>
+
+# vpn
+# 连接公司 VPN 需要安装 openconnect.
+sudo aptitude install -y network-manager-openconnect-gnome
+# 配置 VPN, 只需要在 "网关" 输入公司 VPN 地址, 不需要 "https://" 前缀.
+# 点连接, 输入用户名, 密码即可登陆成功.
 ```
 
 ## 个人
+
+### 设置 "HOME" 目录下的文件夹为英文名
+
+"用户账户" 修改用户语言为 "英语(美国)",
+重新登陆后系统自动运行 `/usr/bin/xdg-user-dirs-gtk-update` 
+提示修改文件名, 选择 "Yes".
+再次修改用户语言恢复为 "汉语", 
+重启登陆后提示修改文件名时选择 "否", 并勾选 "不要再提示".
 
 ## inputrc
 
