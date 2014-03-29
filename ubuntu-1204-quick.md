@@ -267,6 +267,8 @@ gsettings set com.ubuntu.update-notifier auto-launch false
 * datetime
 
 ```
+# 运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
+# 取消所有显示, 即取消 "show-calendar", "show-clock" 和 "show-events".
 gsettings set com.canonical.indicator.datetime show-calendar false
 gsettings set com.canonical.indicator.datetime show-clock false
 gsettings set com.canonical.indicator.datetime show-events false
@@ -302,10 +304,6 @@ gsettings set com.canonical.indicator.datetime show-events false
 ### 完整指示器
 
 * "Alt" + 右键, "Move", 拖到右下角面板上.
-
-运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
-取消所有显示, 即取消 "show-calendar", "show-clock" 和 "show-events".
-或者用 gsettings, 见 "gnome classic" -> "datetime" 命令.
 
 **TODO**: 取消会话管理的用户名显示. 用户完整名字设置为空可避免显示用户名.
 
