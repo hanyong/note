@@ -8,6 +8,8 @@
 sudo apt-get update
 sudo apt-get install -y aptitude
 sudo aptitude install -y python-software-properties
+sudo aptitude install -y tmux
+sudo aptitude install -y gcc g++ autoconf automake cmake
 # 中文支持
 sudo locale-gen zh_CN.UTF-8 zh_CN.GB18030 zh_CN.GBK
 
@@ -93,6 +95,16 @@ sudo adduser hanyong sudo
 ```sh
 # 打通普通用户 ssh 通道
 ssh-copy-id -i ~/.ssh/id_rsa.pub oolap.com
+```
+
+```sh
+# gollum
+sudo aptitude install ruby1.9.1 ruby1.9.1-dev
+# 按淘宝镜像提示更新 gem 源.
+sudo gem sources -l | grep -P '^http.*\brubygems\.org\b' | xargs --no-run-if-empty sudo gem sources --remove
+sudo gem sources -a http://ruby.taobao.org/
+sudo aptitude install -y libicu-dev
+sudo gem install --no-rdoc --no-ri gollum
 ```
 
 ## 个人设置
