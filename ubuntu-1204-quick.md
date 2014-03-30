@@ -130,6 +130,7 @@ mkdir -p /home/local/bin/
 
 # git
 sudo add-apt-repository -y ppa:git-core/ppa
+sudo apt-get update
 sudo aptitude install -y git gitk git-cola
 sudo chmod +x /usr/share/doc/git/contrib/workdir/git-new-workdir
 ln -sf /usr/share/doc/git/contrib/workdir/git-new-workdir /home/local/bin/
