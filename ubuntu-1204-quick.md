@@ -105,14 +105,14 @@ aptitude install -y lvm2
 
 >如果没有安装 lvm2 系统将无法启动. 
 LiveCD 默认也不支持 lvm, 重启到 LiveCD 安装 lvm2 后也不能自动识别出已创建的 lvm 卷.
-测试发现执行一次 `vgexport` 后再执行一次 `vgimport`, 就会识别到已有的 lvm 卷了.
+测试发现: 执行一次 `vgexport` 后再执行一次 `vgimport`, 就会识别到已有的 lvm 卷了.
 
 >```sh
 # 重启到 LiveCD
 sudo apt-get install -y lvm2
 sudo vgexport -a
 sudo vgimport -a
-```
+>```
 
 ## 全局
 
