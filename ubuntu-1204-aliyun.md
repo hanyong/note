@@ -22,6 +22,9 @@ set nobackup
 set backupdir=~/tmp,/tmp,.
 EOF
 #>
+# tmux
+sudo aptitude install -y tmux
+#>
 
 # 修改 hostname
 # FIXME: 经测试不能改 hostname, 重启后 hostname 恢复为原设置.
