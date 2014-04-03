@@ -61,6 +61,14 @@ sudo aptitude install -y squid
 sudo aptitude install -y git
 ```
 
+```sh
+# 2014-04-03
+sudo aptitude install -y xauth
+sudo aptitude install -y curl
+sudo aptitude install -y command-not-found
+sudo aptitude install -y bash-completion
+```
+
 ## 用户设置
 
 ```sh
