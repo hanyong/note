@@ -1,9 +1,10 @@
-gollum 安装笔记
+RHEL5 gollum 安装笔记
 ===
 
 gollum 是个很棒的 wiki (文档服务器), 支持 github markdown.
 可惜用了 ruby 语言, 一直很讨厌 ruby,
 不过 gitlab 的 wiki 实在太烂, 还是决定自己搭一下 gollum.
+目标机器是 RHEL5.
 
 **快速安装** 可参考如下命令 (需要 sudo 权限, 安装到系统目录):
 
@@ -16,7 +17,7 @@ wget http://download.icu-project.org/files/icu4c/52.1/icu4c-52_1-RHEL6-x64.tgz
 tar xf icu4c-52_1-RHEL6-x64.tgz
 sudo rsync -av --itemize-changes usr/local/ /usr/
 
-sudo gem install gollum
+sudo gem install --no-rdoc --no-ri gollum
 ```
 
 个人目录 "绿色" 安装笔记如下.
@@ -315,6 +316,8 @@ linuxbrew 相关设置 (PATH, LD_LIBRARY_PATH) 也清掉.
 不设置会加载不到 icu4c 动态库.
 貌似也不用额外安装文档格式模块, markdown 等很多格式都默认支持了.
 
+**UPDATE**: `gem install` 时添加 `--no-rdoc --no-ri` 参数去掉一些东西, 可以节省很多时间.
+
 使用 linuxbrew 可按如下步骤安装.
 
 ```sh
@@ -346,6 +349,6 @@ gem sources -a http://ruby.taobao.org/
 brew install icu4c
 brew link --force icu4c
 
-gem install gollum
+gem install --no-rdoc --no-ri gollum
 ```
 
