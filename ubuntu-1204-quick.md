@@ -173,6 +173,23 @@ sudo aptitude install -y network-manager-openconnect-gnome
 # 点连接, 输入用户名, 密码即可登陆成功.
 ```
 
+### gollum
+
+```sh
+# c, c++ 基本开发工具
+sudo aptitude install -y gcc g++ autoconf automake cmake
+# ruby
+sudo aptitude install ruby1.9.1 ruby1.9.1-dev
+# 按淘宝镜像提示更新 gem 源.
+# 额, 国外 vps 应该跳过这一步 ?
+sudo gem sources -l | grep -P '^http.*\brubygems\.org\b' | xargs --no-run-if-empty sudo gem sources --remove
+sudo gem sources -a http://ruby.taobao.org/
+# icu4c
+sudo aptitude install -y libicu-dev
+# gollum
+sudo gem install --no-rdoc --no-ri gollum
+```
+
 ## 个人
 
 ### 设置 "HOME" 目录下的文件夹为英文名
