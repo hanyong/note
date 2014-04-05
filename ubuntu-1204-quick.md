@@ -184,6 +184,7 @@ sudo aptitude install ruby1.9.1 ruby1.9.1-dev
 # 额, 国外 vps 应该跳过这一步 ?
 sudo gem sources -l | grep -P '^http.*\brubygems\.org\b' | xargs --no-run-if-empty sudo gem sources --remove
 sudo gem sources -a http://ruby.taobao.org/
+sudo gem sources -l
 # icu4c
 sudo aptitude install -y libicu-dev
 # gollum
