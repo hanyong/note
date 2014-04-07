@@ -90,7 +90,7 @@ openvpn 既是服务器也是客户端, 使用客户端配置即可启动客户�
 sudo openvpn --config ./client.conf --remote us.oolap.com
 ```
 
-使用命令行登录时, 默认只有 `10.8.0.0/8` 子网走 vpn 连接, 查看路由表与上述类似.
+使用命令行登录时, 默认只有 `10.8.0.0/24` 子网走 vpn 连接, 查看路由表与上述类似.
 
 ```sh
 hanyong@han:~$ netstat -rn
@@ -178,7 +178,7 @@ hanyong@hk:~$ cat /proc/sys/net/ipv4/ip_forward
 	使用 iptables 设置 NAT 转发 vpn 私有子网请求到 vpn 服务器外网.
 
 	```sh
-iptables -t nat -A POSTROUTING -s 10.8.0.0/8 -o venet0 -j SNAT --to 199.195.250.158
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o venet0 -j SNAT --to 199.195.250.158
 	```
 
 	这时, 客户端就可以通过 vpn 访问外网, 实现翻墙了, 即 vpn + nat.
