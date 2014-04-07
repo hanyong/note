@@ -132,6 +132,9 @@ Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 192.168.100.0   0.0.0.0         255.255.255.0   U         0 0          0 eth0
 ```
 
+这个路由表与 GUI 设置只走 vpn 时有一些差异.
+另外 GUI 只走 vpn 时 dns 也无法解析, 命令行时可以解析 dns 的.
+
 ## 使用 vpn 翻墙
 
 默认情况下 vpn 只是用来访问私有子网.
@@ -139,7 +142,7 @@ Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 使用 pptpd 参考 [how-to-set-up-a-vpn-in-a-vps][].
 
 0. 首先设置客户端所有网络走 vpn. 
-这时会所有网络都连不通, dns 也无法解析, 即前面所说的情况.
+这时会所有网络都连不通, 即前面所说的情况.
 
 0. 设置 vpn 服务器推送 DNS 服务器设置到客户端.
 
