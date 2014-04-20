@@ -55,6 +55,7 @@ set -g prefix ^A
 bind a send-prefix
 
 # keys
+set -g xterm-keys on
 set -g mode-keys vi
 set -g status-keys vi
 
