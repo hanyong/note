@@ -161,6 +161,7 @@ sudo aptitude install -R -y avant-window-navigator awn-settings libdesktop-agnos
 sudo aptitude install -y vim vim-gnome
 sudo tee /etc/vim/vimrc.local <<EOF
 set ts=4 sw=4 nu
+set et
 set nobackup
 set backupdir=~/tmp,/tmp,.
 EOF
@@ -226,7 +227,10 @@ gsettings set org.gnome.gedit.preferences.editor display-line-numbers true
 gsettings set org.gnome.gedit.preferences.editor wrap-mode none
 # "编辑器" tab, "制表符宽度" 修改为 "4", 取消 "在保存前创建备份文件".
 gsettings set org.gnome.gedit.preferences.editor tabs-size 4
+gsettings set org.gnome.gedit.preferences.editor auto-indent true
 gsettings set org.gnome.gedit.preferences.editor create-backup-copy false
+# "使用空格代替制表符插入"
+gsettings set org.gnome.gedit.preferences.editor insert-spaces true
 
 # 显示文件末尾换行符
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
