@@ -78,7 +78,7 @@ set -g terminal-overrides "xterm*:smcup@:rmcup@"
 忽略颜色设置等差异, 我们可能关心的差异有如下几点.
 注释掉的设置表示 `tmux` 默认.
 
-```
+```sh
 # 设置 gnome-terminal 窗口标题栏
 #set -g set-titles off
 #set -g set-titles-string "#S:#I:#W - "#T""
