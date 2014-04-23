@@ -128,6 +128,12 @@ sudo mkdir -p /home/local/
 sudo chown $USER:$USER /home/local/
 mkdir -p /home/local/bin/
 
+# 系统设置
+# adduser 用户名允许使用 "."
+sudo sed -i '/^NAME_REGEX=/ d; /^#NAME_REGEX=/ a \''
+NAME_REGEX="^[a-z][-a-z0-9_.]*$"
+' /etc/adduser.conf
+
 # git
 sudo add-apt-repository -y ppa:git-core/ppa
 sudo apt-get update
