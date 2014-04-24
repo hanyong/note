@@ -178,6 +178,10 @@ EOF
 sudo aptitude install -y network-manager-openconnect-gnome
 # 配置 VPN, 只需要在 "网关" 输入公司 VPN 地址, 不需要 "https://" 前缀.
 # 点连接, 输入用户名, 密码即可登陆成功.
+# GUI 登录老是出现 "VPN secret 非法" 的错误. 命令行登录可以成功.
+# 安装 `vpnc` 得到得到脚本 `/etc/vpnc/vpnc-script`, 
+# 然后使用 `sudo openconnect --script /etc/vpnc/vpnc-script <server>` 即可登录成功.
+sudo aptitude install -y vpnc
 ```
 
 ### gollum
