@@ -152,6 +152,9 @@ gsettings set com.canonical.desktop.interface scrollbar-mode normal
 # 标题栏关闭按钮靠右.
 gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
 
+# vim
+sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim73/vimrc_example.vim > ~/.vimrc
+
 # gedit
 # "编辑" -> "首选项".
 # "查看" tab, 勾选 "显示行号", 取消 "启用自动换行".
