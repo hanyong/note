@@ -90,6 +90,14 @@ sudo aptitude install -y realpath tree
 sudo aptitude install -y unrar
 
 # 系统设置
+# inputrc
+sudo tee -a /etc/inputrc <<EOF
+
+# mappings for Ctrl-up-arrow and Ctrl-down-arrow for history search
+"\e[1;5A": history-search-backward
+"\e[1;5B": history-search-forward
+EOF
+: '>'
 # adduser 用户名允许使用 "."
 sudo sed -i '/^NAME_REGEX=/ d; /^#NAME_REGEX=/ a \''
 NAME_REGEX="^[a-z][-a-z0-9_.]*$"
@@ -133,19 +141,6 @@ sudo aptitude install -y sogoupinyin
 ```sh
 # 为简化修改进程 locale, 删除 `LC_` 相关环境变量设置.
 sed -i -e '/^LC_/ d' ~/.pam_environment
-
-# .inputrc
-cat <<'EOF' > ~/.inputrc
-$include /etc/inputrc
-
-# mappings for Ctrl-left-arrow and Ctrl-right-arrow for word moving
-"\e[1;5C": forward-word
-"\e[1;5D": backward-word
-
-# Control-Up, Control-Down
-"\e[1;5A": history-search-backward
-"\e[1;5B": history-search-forward
-EOF
 
 # 设置正常滚动条.
 gsettings set com.canonical.desktop.interface scrollbar-mode normal
