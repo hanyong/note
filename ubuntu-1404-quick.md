@@ -148,7 +148,7 @@ gsettings set com.canonical.desktop.interface scrollbar-mode normal
 gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
 
 # vim
-sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim73/vimrc_example.vim > ~/.vimrc
+sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim74/vimrc_example.vim > ~/.vimrc
 
 # gedit
 # "编辑" -> "首选项".
