@@ -111,6 +111,7 @@ sudo update-grub
 
 # gnome-session-flashback
 sudo aptitude install -y gnome-session-flashback
+sudo aptitude install compiz-plugins compizconfig-settings-manager
 #从登陆界面选择 "GNOME Flashback (Compiz)" 进入系统.
 
 # vim
@@ -147,6 +148,9 @@ gdebi-gtk sogou_pinyin_linux_1.1.0.0037_amd64.deb
 
 打开搜狗输入法设置, 设置 "隐藏状态栏" (因为测试了下状态栏显示有问题, 不如不要), 
 修改使用方括号键翻页.
+
+运行 "ccsm", "特效" 取消 "Animations" 和 "渐隐窗口", 仅保留一个 "窗口装饰" 即可.
+"窗口管理" 勾选上 "Static Application Switcher", 支持 "Alt + Tab" 切换窗口.
 
 ### 脚本自动操作
 
