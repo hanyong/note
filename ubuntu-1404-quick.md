@@ -79,7 +79,7 @@ sudo mkswap -f /dev/mapper/vg-lvswap
 
 ```sh
 # 添加额外的源, 如 git, ubuntu kylin
-sudo add-apt-repository ppa:git-cola/ppa
+sudo add-apt-repository ppa:git-core/ppa
 sudo add-apt-repository ppa:ubuntukylin-members/ubuntukylin
 sudo apt-get update
 # 安装一些基本工具
