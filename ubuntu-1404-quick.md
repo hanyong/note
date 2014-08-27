@@ -137,6 +137,27 @@ gdebi-gtk sogou_pinyin_linux_1.1.0.0037_amd64.deb
 #将 "键盘输入方式系统" 修改为 "fcitx".
 ```
 
+### 手动操作
+
+软件中心去掉 "软件商店" 中的收费项目.
+参考 [这里](http://askubuntu.com/questions/47997/how-to-remove-the-for-purchase-section-from-the-software-center/404153#404153).
+
+修改文件:
+
+```sh
+sudo vim /usr/share/software-center/softwarecenter/db/update.py
+```
+
+`def make_doc` 函数开头添加 3 行修改如下:
+
+```py
+    def make_doc(self, cache):
+        """Build a Xapian document from the desktop info."""
+        if self.has_option_desktop("X-AppInstall-Price"):
+            if self.get_desktop("X-AppInstall-Price") > 0:
+                return
+```
+
 ## 个人设置
 
 ### 手动操作
