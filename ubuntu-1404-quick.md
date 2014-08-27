@@ -80,12 +80,11 @@ sudo mkswap -f /dev/mapper/vg-lvswap
 ```sh
 # 添加额外的源, 如 git, ubuntu kylin
 sudo add-apt-repository ppa:git-core/ppa
-sudo add-apt-repository ppa:ubuntukylin-members/ubuntukylin
+#sudo add-apt-repository ppa:ubuntukylin-members/ubuntukylin
 sudo apt-get update
 # 安装一些基本工具
 sudo apt-get install -y aptitude
-sudo aptitude install -y dconf-tools
-sudo aptitude install -y gconf-editor
+sudo aptitude install -y gconf-editor dconf-editor
 sudo aptitude install -y realpath tree
 sudo aptitude install -y unrar
 
@@ -129,12 +128,23 @@ EOF
 sudo aptitude install -y git gitk git-cola
 
 # 搜狗输入法
-sudo aptitude install -y sogoupinyin
+#sudo aptitude install -y sogoupinyin
+# 从搜狗官方网站下载 ".deb" 安装包
+sudo aptitude install -y gdebi
+gdebi-gtk sogou_pinyin_linux_1.1.0.0037_amd64.deb
 #安装完成后从 "系统设置" 打开 "语言支持", 
 #将 "键盘输入方式系统" 修改为 "fcitx".
 ```
 
 ## 个人设置
+
+### 手动操作
+
+从 "系统设置" 打开 "语言支持", 
+将 "键盘输入方式系统" 修改为 "fcitx".
+
+打开搜狗输入法设置, 设置 "隐藏状态栏" (因为测试了下状态栏显示有问题, 不如不要), 
+修改使用方括号键翻页.
 
 ### 脚本自动操作
 
@@ -166,13 +176,5 @@ gsettings set org.gnome.gedit.preferences.editor insert-spaces true
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
 gsettings set org.gnome.gedit.preferences.editor ensure-trailing-newline false
 ```
-
-### 手动操作
-
-从 "系统设置" 打开 "语言支持", 
-将 "键盘输入方式系统" 修改为 "fcitx".
-
-打开搜狗输入法设置, 设置 "隐藏状态栏" (因为测试了下状态栏显示有问题, 不如不要), 
-修改使用方括号键翻页.
 
 其他相关设置可参考 [12.04 设置](ubuntu-1204-quick).
