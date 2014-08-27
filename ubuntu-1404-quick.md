@@ -163,6 +163,9 @@ gsettings set com.canonical.desktop.interface scrollbar-mode normal
 # 标题栏关闭按钮靠右.
 gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
 
+# 搜索内容时禁止从网上搜索
+gsettings set com.canonical.Unity.Lenses remote-content-search none
+
 # vim
 sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim74/vimrc_example.vim > ~/.vimrc
 
