@@ -128,6 +128,11 @@ EOF
 # git
 sudo aptitude install -y git gitk git-cola
 
+# wireshark
+sudo aptitude install -y wireshark
+# 设置非 root 用户可以使用 wireshark, 执行如下命令, 选择 "是".
+sudo dpkg-reconfigure wireshark-common
+
 # 搜狗输入法
 #sudo aptitude install -y sogoupinyin
 # 从搜狗官方网站下载 ".deb" 安装包
@@ -172,6 +177,14 @@ sudo vim /usr/share/software-center/softwarecenter/db/update.py
 
 运行 "ccsm", "特效" 取消 "Animations" 和 "渐隐窗口", 仅保留一个 "窗口装饰" 即可.
 "窗口管理" 勾选上 "Static Application Switcher", 支持 "Alt + Tab" 切换窗口.
+
+```sh
+# .profile 添加设置 "export LIBOVERLAY_SCROLLBAR=0", 否则 wireshark 会崩溃.
+# 参考: http://www.bictor.com/2014/06/05/wireshark-crashes-in-ubuntu-14-04/
+echo "export LIBOVERLAY_SCROLLBAR=0" >> .profile
+sudo adduser $USER wireshark
+# 添加用户到组后要注销重新登录才能生效.
+```
 
 ### 脚本自动操作
 
