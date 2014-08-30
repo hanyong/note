@@ -205,7 +205,7 @@ gsettings set org.gnome.gedit.preferences.editor tabs-size 4
 gsettings set org.gnome.gedit.preferences.editor auto-indent true
 gsettings set org.gnome.gedit.preferences.editor create-backup-copy false
 # "使用空格代替制表符插入"
-gsettings set org.gnome.gedit.preferences.editor insert-spaces true
+#gsettings set org.gnome.gedit.preferences.editor insert-spaces true
 
 # 显示文件末尾换行符
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
