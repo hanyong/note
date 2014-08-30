@@ -186,11 +186,11 @@ sudo vim /usr/share/software-center/softwarecenter/db/update.py
 cairo-dock 配置:
 
 * 基于默认主题 "Default-Single".
-"Configuration", "行为", "主 Dock 面板的可见性" 设置为 "为 dock 保留的空间",
+	* "Configuration", "行为", "主 Dock 面板的可见性" 设置为 "为 dock 保留的空间",
 "鼠标悬停时" 动画选择为空, "在点击时" 动画选择 "脉动"; 
 "外观", "主停靠栏外观" 选择 "面板".
-"附加组件", 除 "应用程序菜单" 外其他全部取消.
-"Current items", 删除所有不要的启动器和分割符.
+	* "附加组件", 除 "应用程序菜单" 外其他全部取消.
+	* "Current items", 删除所有不要的启动器和分割符.
 "应用程序菜单", "配置", "Display a notification to quickly launch new applications" 取消勾选,
 "Show Logout and/or Shutdown" 选择 "Both".
 
@@ -205,8 +205,10 @@ cairo-dock 配置:
 	* "系统设置", "面板", "Ratio to apply on icons' size" 设置为 "normal icons" "1.000".
 	* "背景", "图片透明度" 设置为 "0.750".
 	* "图标", "图标大小" 设置为 "48x48". "图标放大最大大小" 设置为 "1.000".
-	* "Illusion", "Fade out", "Duration of the animation" 设置为最小值 "100".
-	* "动态图标", "繁忙", "Image size" 设置为 "0.720".
+	* "Illusion", "Global", "Animation on disappearance" 和 "Animation on appearance" 均设置为 "Fade out";
+"Fade out", "Duration of the animation" 设置为最小值 "100".
+	* "动态图标", "Global", "Repeat these effects until the corresponding application opens" 取消勾选;
+"繁忙", "Image size" 设置为 "0.720".
 
 设置完毕后, "Cairo-Dock" 菜单选择 "开机启动 Cairo-Dock".
 
