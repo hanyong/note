@@ -178,14 +178,6 @@ sudo vim /usr/share/software-center/softwarecenter/db/update.py
 运行 "ccsm", "特效" 取消 "Animations" 和 "渐隐窗口", 仅保留一个 "窗口装饰" 即可.
 "窗口管理" 勾选上 "Static Application Switcher", 支持 "Alt + Tab" 切换窗口.
 
-```sh
-# .profile 添加设置 "export LIBOVERLAY_SCROLLBAR=0", 否则 wireshark 会崩溃.
-# 参考: http://www.bictor.com/2014/06/05/wireshark-crashes-in-ubuntu-14-04/
-echo "export LIBOVERLAY_SCROLLBAR=0" >> ~/.profile
-sudo adduser $USER wireshark
-# 添加用户到组后要注销重新登录才能生效.
-```
-
 ### 脚本自动操作
 
 ```sh
@@ -218,6 +210,16 @@ gsettings set org.gnome.gedit.preferences.editor insert-spaces true
 # 显示文件末尾换行符
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
 gsettings set org.gnome.gedit.preferences.editor ensure-trailing-newline false
+
+# .profile 添加设置 "export LIBOVERLAY_SCROLLBAR=0", 否则 wireshark 会崩溃.
+# 参考: http://www.bictor.com/2014/06/05/wireshark-crashes-in-ubuntu-14-04/
+cat <<EOF >> ~/.profile
+
+# fix wireshark crash
+export LIBOVERLAY_SCROLLBAR=0
+EOF
+sudo adduser $USER wireshark
+# 添加用户到组后要注销重新登录才能生效.
 ```
 
 其他相关设置可参考 [12.04 设置](ubuntu-1204-quick).
