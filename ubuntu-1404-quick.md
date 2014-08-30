@@ -86,7 +86,7 @@ sudo apt-get update
 sudo apt-get install -y aptitude
 sudo aptitude install -y gconf-editor dconf-editor
 sudo aptitude install -y realpath tree
-sudo aptitude install -y unrar
+sudo aptitude install -y unrar p7zip-full p7zip-rar
 
 # 系统设置
 # inputrc
