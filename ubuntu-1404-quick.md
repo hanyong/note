@@ -181,7 +181,7 @@ sudo vim /usr/share/software-center/softwarecenter/db/update.py
 ```sh
 # .profile 添加设置 "export LIBOVERLAY_SCROLLBAR=0", 否则 wireshark 会崩溃.
 # 参考: http://www.bictor.com/2014/06/05/wireshark-crashes-in-ubuntu-14-04/
-echo "export LIBOVERLAY_SCROLLBAR=0" >> .profile
+echo "export LIBOVERLAY_SCROLLBAR=0" >> ~/.profile
 sudo adduser $USER wireshark
 # 添加用户到组后要注销重新登录才能生效.
 ```
