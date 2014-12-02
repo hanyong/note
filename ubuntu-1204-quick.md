@@ -29,8 +29,6 @@ initrd /home/software/linux/ubuntu-12.04.4-desktop-amd64/casper/initrd.lz
 sudo umount -l /isodevice/
 ```
 
-运行安装程序, 语言选择中文, 手动设置分区, 完成安装.
-
 ### 设置 lvm 分区
 
 安装系统前可以参考 [UbuntuDesktopLVM][] 设置 lvm 逻辑卷.
@@ -70,11 +68,21 @@ sudo mkfs.ext4 /dev/mapper/vg-lvopt
 sudo mkswap -f /dev/mapper/vg-lvswap
 ```
 
-手动分区时设置创建好的逻辑卷作为安装分区.
+>LiveCD 默认不支持 lvm, 重启到 LiveCD 安装 lvm2 后不能自动识别出已创建的 lvm 卷设备.
+测试发现: 执行一次 `vgexport` 后再执行一次 `vgimport`, 就会识别到已有的 lvm 卷了.
 
-**注意**: 
-* 启动程序 (如 grub) 不能识别逻辑卷, `/boot` 必须挂载在非逻辑卷 `${BOOT_DEV}` 上.
-* Desktop 默认内核没有安装逻辑卷功能, 安装完系统后不能立即重启, 
+>```sh
+# 重启到 LiveCD
+sudo apt-get install -y lvm2
+sudo vgexport -a
+sudo vgimport -a
+>```
+
+运行安装程序, 语言选择中文, 
+手动设置分区, 设置创建好的逻辑卷作为安装分区.
+**注意**: 启动程序 (如 grub) 可能不能识别逻辑卷, `/boot` 最好挂载在非逻辑卷 `${BOOT_DEV}` 上.
+
+Desktop 内核默认没有安装逻辑卷功能, 安装完系统后不能立即重启, 
 按下列操作为安装后的系统安装 lvm2.
 
 ```sh
@@ -100,46 +108,44 @@ dm-mirror
 EOF
 
 # 安装 lvm2
-aptitude install -y lvm2
+apt-get install -y lvm2
 ```
 
 >如果没有安装 lvm2 系统将无法启动. 
 LiveCD 默认也不支持 lvm, 重启到 LiveCD 安装 lvm2 后也不能自动识别出已创建的 lvm 卷.
 测试发现: 执行一次 `vgexport` 后再执行一次 `vgimport`, 就会识别到已有的 lvm 卷了.
 
->```sh
-# 重启到 LiveCD
-sudo apt-get install -y lvm2
-sudo vgexport -a
-sudo vgimport -a
->```
-
 ## 全局
 
 ```sh
-# aptitude 基本工具
-sudo apt-get update
-sudo apt-get install -y aptitude
-sudo aptitude install -y dconf-tools
-sudo aptitude install -y gconf-editor
-sudo aptitude install -y realpath
+# vim 基本配置
+sudo tee /etc/vim/vimrc.local <<EOF
+set ts=4 sw=4 nu
+set et
+set nobackup
+set backupdir=~/tmp,/tmp,.
+EOF
+#>
 
-sudo mkdir -p /home/local/
-sudo chown $USER:$USER /home/local/
-mkdir -p /home/local/bin/
-
-# 系统设置
 # adduser 用户名允许使用 "."
 sudo sed -i '/^NAME_REGEX=/ d; /^#NAME_REGEX=/ a \''
 NAME_REGEX="^[a-z][-a-z0-9_.]*$"
 ' /etc/adduser.conf
 
-# git
-sudo add-apt-repository -y ppa:git-core/ppa
+# 基本工具
 sudo apt-get update
+sudo apt-get install -y aptitude dconf-tools gconf-editor realpath
+# 其他工具
+sudo aptitude install -y gnome-color-chooser tree unrar
+
+# 系统设置
+
+# git
+#sudo add-apt-repository -y ppa:git-core/ppa
+#sudo apt-get update
 sudo aptitude install -y git gitk git-cola
 sudo chmod +x /usr/share/doc/git/contrib/workdir/git-new-workdir
-ln -sf /usr/share/doc/git/contrib/workdir/git-new-workdir /home/local/bin/
+#ln -sf /usr/share/doc/git/contrib/workdir/git-new-workdir ~/usr/local/bin/
 
 # gnome classic
 # https://help.ubuntu.com/community/PreciseGnomeClassicTweaks
@@ -151,27 +157,15 @@ sudo aptitude install -y gnome-panel
 sudo aptitude install -y indicator-applet indicator-applet-session
 #注销, 登陆界面选择 "GNOME Classic (No effects)" 进入系统.
 
-# 其他工具
-sudo aptitude install -y gnome-color-chooser
-sudo aptitude install -y tree
-sudo aptitude install -y unrar
-
 # awn dock.
 #`-R` 避免安装一堆用不着的 awn 推荐依赖. 
 # 安装 `libdesktop-agnostic-cfg-gconf` 避免 dock 启动时出现一个讨厌的绿色 "+" 号,
 # 参考: https://bugs.launchpad.net/awn/+bug/990774.
-sudo aptitude install -R -y avant-window-navigator awn-settings libdesktop-agnostic-cfg-gconf
+sudo aptitude install -R -y avant-window-navigator awn-settings awn-applet-cairo-main-menu libdesktop-agnostic-cfg-gconf
 
 # vim
 # 需要安装 `vim-gnome` 后才能简单在 vim 中复制内容到 gnome 剪贴板.
 sudo aptitude install -y vim vim-gnome
-sudo tee /etc/vim/vimrc.local <<EOF
-set ts=4 sw=4 nu
-set et
-set nobackup
-set backupdir=~/tmp,/tmp,.
-EOF
-#>
 
 # vpn
 # 连接公司 VPN 需要安装 openconnect.
@@ -196,8 +190,8 @@ sudo aptitude install -y ruby1.9.1 ruby1.9.1-dev
 sudo gem sources -l | grep -P '^http.*\brubygems\.org\b' | xargs --no-run-if-empty sudo gem sources --remove
 sudo gem sources -a http://ruby.taobao.org/
 sudo gem sources -l
-# icu4c
-sudo aptitude install -y libicu-dev
+# icu4c zlib1g-dev
+sudo aptitude install -y libicu-dev zlib1g-dev
 # gollum
 sudo gem install --no-rdoc --no-ri gollum
 ```
@@ -222,7 +216,7 @@ $include /etc/inputrc
 "\e[1;5C": forward-word
 "\e[1;5D": backward-word
 
-# Control-Up, Control-Down
+# mappings for Ctrl-up-arrow and Ctrl-down-arrow for history search
 "\e[1;5A": history-search-backward
 "\e[1;5B": history-search-forward
 EOF
@@ -240,7 +234,7 @@ gsettings set org.gnome.gedit.preferences.editor tabs-size 4
 gsettings set org.gnome.gedit.preferences.editor auto-indent true
 gsettings set org.gnome.gedit.preferences.editor create-backup-copy false
 # "使用空格代替制表符插入"
-gsettings set org.gnome.gedit.preferences.editor insert-spaces true
+#gsettings set org.gnome.gedit.preferences.editor insert-spaces true
 
 # 显示文件末尾换行符
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
@@ -274,36 +268,29 @@ git config --global user.name hanyong
 git config --global user.email observer.hany@alibaba-inc.com
 git config --global diff.tool bc3
 git config --global merge.tool bc3
-git config --global push.default simple
+#git config --global push.default simple
+git config --global push.default current
 ```
 
 ## gnome classic
 
-* move min/max/close buttons
 
 ```sh
+# move min/max/close buttons
 gconftool-2 --set "/apps/metacity/general/button_layout" --type string ":minimize,maximize,close"
-```
 
-* Run dialog
+# Run dialog
+#gconftool-2 --set "/apps/metacity/global_keybindings/panel_run_dialog" --type string "<Alt>F2"
 
-```sh
-gconftool-2 --set "/apps/metacity/global_keybindings/panel_run_dialog" --type string "<Alt>F2"
-```
-
-* update-notifier
-
-```sh
+# update-notifier
 gsettings set com.ubuntu.update-notifier auto-launch false
 ```
 
-* datetime
-
-```
+# datetime
 # 运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
 # 取消所有显示, 即取消 "show-calendar", "show-clock" 和 "show-events".
-gsettings set com.canonical.indicator.datetime show-calendar false
-gsettings set com.canonical.indicator.datetime show-clock false
+#gsettings set com.canonical.indicator.datetime show-calendar false
+#gsettings set com.canonical.indicator.datetime show-clock false
 gsettings set com.canonical.indicator.datetime show-events false
 ```
 
@@ -388,4 +375,3 @@ sed -re '/^\s*set\s+backup/ s#^#"#' /usr/share/vim/vim73/vimrc_example.vim > ~/.
 官网上下载附加格式支持包, "Tools" -> "Import Settings...", 选择需要导入支持的格式.
 
 [UbuntuDesktopLVM]: https://help.ubuntu.com/community/UbuntuDesktopLVM
-
