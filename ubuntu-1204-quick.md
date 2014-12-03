@@ -139,6 +139,7 @@ sudo apt-get install -y aptitude dconf-tools gconf-editor realpath
 sudo aptitude install -y gnome-color-chooser tree unrar
 
 # 系统设置
+sudo locale-gen zh_CN.GBK zh_CN.GB18030
 
 # git
 #sudo add-apt-repository -y ppa:git-core/ppa
@@ -155,6 +156,9 @@ sudo aptitude remove -y indicator-appmenu
 sudo aptitude remove -y overlay-scrollbar liboverlay-scrollbar3-0.2-0 liboverlay-scrollbar-0.2-0
 sudo aptitude install -y gnome-panel
 sudo aptitude install -y indicator-applet indicator-applet-session
+# "GNOME Classic (No effects)" 默认使用 metacity, "GNOME Classic" 默认使用 compiz,
+# 如果要使用 compiz, 可安装相应配置管理和插件
+sudo aptitude install -y compiz compizconfig-settings-manager compiz-plugins-extra compiz-plugins-main compiz-plugins
 #注销, 登陆界面选择 "GNOME Classic (No effects)" 进入系统.
 
 # awn dock.
@@ -205,6 +209,12 @@ sudo gem install --no-rdoc --no-ri gollum
 提示修改文件名, 选择 "Yes".
 再次修改用户语言恢复为 "汉语", 
 重启登陆后提示修改文件名时选择 "否", 并勾选 "不要再提示".
+
+删除 `.pam_environment` 文件中 "^LC_" 相关设置.
+
+```sh
+sed -i '/^LC_/ d' .pam_environment
+```
 
 ## inputrc
 
@@ -284,7 +294,6 @@ gconftool-2 --set "/apps/metacity/general/button_layout" --type string ":minimiz
 
 # update-notifier
 gsettings set com.ubuntu.update-notifier auto-launch false
-```
 
 # datetime
 # 运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
