@@ -300,7 +300,7 @@ gsettings set com.ubuntu.update-notifier auto-launch false
 # 取消 "show-events".
 gsettings set com.canonical.indicator.datetime show-events false
 gsettings set com.canonical.indicator.datetime time-format custom
-gsettings set com.canonical.indicator.datetime custom-time-format '%F %T'
+gsettings set com.canonical.indicator.datetime custom-time-format '%F %A %H:%M'
 # 或者删除 "完整指示器", 依次添加 "指示器小程序", "时钟" 和 "指示器小程序会话" 到右下角.
 #sudo aptitude install -y indicator-applet indicator-applet-session
 ```
