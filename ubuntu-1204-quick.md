@@ -155,8 +155,7 @@ sudo chmod +x /usr/share/doc/git/contrib/workdir/git-new-workdir
 sudo aptitude remove -y indicator-appmenu
 sudo aptitude remove -y overlay-scrollbar liboverlay-scrollbar3-0.2-0 liboverlay-scrollbar-0.2-0
 sudo aptitude install -y gnome-panel
-sudo aptitude install -y indicator-applet indicator-applet-session
-# "GNOME Classic (No effects)" 默认使用 metacity, "GNOME Classic" 默认使用 compiz,
+# "GNOME Classic (No effects)" 默认使用 metacity, "GNOME Classic" 默认使用 compiz.
 # 如果要使用 compiz, 可安装相应配置管理和插件
 sudo aptitude install -y compiz compizconfig-settings-manager compiz-plugins-extra compiz-plugins-main compiz-plugins
 #注销, 登陆界面选择 "GNOME Classic (No effects)" 进入系统.
@@ -284,7 +283,6 @@ git config --global push.default current
 
 ## gnome classic
 
-
 ```sh
 # move min/max/close buttons
 gconftool-2 --set "/apps/metacity/general/button_layout" --type string ":minimize,maximize,close"
@@ -295,12 +293,16 @@ gconftool-2 --set "/apps/metacity/general/button_layout" --type string ":minimiz
 # update-notifier
 gsettings set com.ubuntu.update-notifier auto-launch false
 
-# datetime
+# "显示桌面", "Alt" + 右键, "移动", 拖到最右下.
+# 完整指示器, "Alt" + 右键, "Move", 拖到右下角面板上.
+# 用户完整名字设置为空可避免显示用户名.
 # 运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
-# 取消所有显示, 即取消 "show-calendar", "show-clock" 和 "show-events".
-#gsettings set com.canonical.indicator.datetime show-calendar false
-#gsettings set com.canonical.indicator.datetime show-clock false
+# 取消 "show-events".
 gsettings set com.canonical.indicator.datetime show-events false
+gsettings set com.canonical.indicator.datetime time-format custom
+gsettings set com.canonical.indicator.datetime custom-time-format '%F %T'
+# 或者删除 "完整指示器", 依次添加 "指示器小程序", "时钟" 和 "指示器小程序会话" 到右下角.
+#sudo aptitude install -y indicator-applet indicator-applet-session
 ```
 
 * 提示框颜色
@@ -316,11 +318,14 @@ gsettings set com.canonical.indicator.datetime show-events false
 "Choose Folder...", "~/var/firefox/default", "Finish".
 "Start Firefox".
 
-"编辑" -> "首选项".
 
-* 常规 tab, "启动 Firefox 时" 选择 "显示上次打开的窗口和标签页".
+>如果没有已有配置，可进行如下基本设置.
+
+>"编辑" -> "首选项".
+
+>* 常规 tab, "启动 Firefox 时" 选择 "显示上次打开的窗口和标签页".
 "下载" 选择 "总是询问保存文件的位置".
-* 高级 tab, "证书", 设置 "自动选择一个", "查看证书" -> "您的证书" -> "导入...", 选择个人 p12 证书文件.
+>* 高级 tab, "证书", 设置 "自动选择一个", "查看证书" -> "您的证书" -> "导入...", 选择个人 p12 证书文件.
 弹出 "修改主密码", 保留为空, 直接点 "确定", 弹出警告, 再确定.
 弹出密码输入对话框, 输入证书密码, 点 "确定".
 
@@ -329,22 +334,6 @@ gsettings set com.canonical.indicator.datetime show-events false
 ### 桌面切换
 * 右键, "首选项", "工作区的数量" 修改为 "1".
 * "Alt" + 右键, "从面板上删除".
-
-### 完整指示器
-
-* "Alt" + 右键, "Move", 拖到右下角面板上.
-
-**TODO**: 取消会话管理的用户名显示. 用户完整名字设置为空可避免显示用户名.
-
-添加 "时钟" 到面板.
-
-OR:
-
-* 删除 "完整指示器", 依次添加 "指示器小程序", "时钟" 和 "指示器小程序会话" 到右下角.
-
-### 显示桌面
-
-* "Alt" + 右键, "移动", 拖到最右下.
 
 ### 顶面板
 
@@ -356,7 +345,7 @@ OR:
 
 运行 `avant-window-navigator`.
 
-* "首选项", "Size of icons" 设置为 "40" pixels.
+* "首选项", -"Size of icons" 设置为 "40" pixels-.
 "Position on the screen" 设置为 "左边".
 勾选 "Start Awn automatically".
 * "Task Manager", 取消 "Group common windows".
@@ -366,7 +355,7 @@ OR:
 
 awn 设置好后删除底面板上的 "task list".
 
-默认 "awn" 启动很慢, 登陆后过一会才出现. 
+>使用 "GNOME Classic (No effects)" (metacity) 时默认 "awn" 启动很慢, 登陆后过一会才出现. 
 电源 (会话) 按钮点 "启动应用程序...", 找到 "awn".
 点 "编辑", "命令" 栏删除默认的 ` --startup` 参数, 似乎可以解决问题.
 
