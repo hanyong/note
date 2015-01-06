@@ -136,7 +136,11 @@ NAME_REGEX="^[a-z][-a-z0-9_.]*$"
 sudo apt-get update
 sudo apt-get install -y aptitude dconf-tools gconf-editor realpath
 # 其他工具
-sudo aptitude install -y gnome-color-chooser tree unrar
+#sudo aptitude install -y gnome-color-chooser
+sudo aptitude install -y tree unrar
+
+# fix "小提示" 前景色, 背景色
+sudo sed -i -r -e 's/tooltip_bg_color\:\#\w+/tooltip_bg_color:#FFFFAF/' -e 's/tooltip_fg_color\:\#\w+/tooltip_fg_color:#000000/' /usr/share/themes/Ambiance/{gtk-2.0/gtkrc,gtk-3.0/settings.ini}
 
 # 系统设置
 sudo locale-gen zh_CN.GBK zh_CN.GB18030
