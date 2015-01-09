@@ -140,7 +140,9 @@ sudo apt-get install -y aptitude dconf-tools gconf-editor realpath
 sudo aptitude install -y tree unrar
 
 # fix "小提示" 前景色, 背景色
-sudo sed -i -r -e 's/tooltip_bg_color\:\#\w+/tooltip_bg_color:#FFFFAF/' -e 's/tooltip_fg_color\:\#\w+/tooltip_fg_color:#000000/' /usr/share/themes/Ambiance/{gtk-2.0/gtkrc,gtk-3.0/settings.ini}
+sudo sed -i -r -e 's/tooltip_bg_color\:\#\w+/tooltip_bg_color:#FFFFAF/' \
+-e 's/tooltip_fg_color\:\#\w+/tooltip_fg_color:#000000/' \
+/usr/share/themes/Ambiance/{gtk-2.0/gtkrc,gtk-3.0/settings.ini}
 
 # 系统设置
 sudo locale-gen zh_CN.GBK zh_CN.GB18030
@@ -275,8 +277,9 @@ s0 = r"""'"$(gconftool-2 --get /apps/compiz-1/general/screen0/options/active_plu
 L = s0[1:-1].split(",")
 L = [ e for e in L if not e in toDel]
 L += [e for e in toAdd if not e in L]
-print ",".join(L)
-')" && gconftool-2 --type list --list-type string --set /apps/compiz-1/general/screen0/options/active_plugins "[$x]"
+print "[" + ",".join(L) + "]"
+')" && 
+gconftool-2 --type list --list-type string --set /apps/compiz-1/general/screen0/options/active_plugins "$x"
 )
 # 窗口管理 "缩放" 插件禁用 '<Shift><Alt>Up' 快捷键, 避免跟 eclipse 快捷键冲突
 gconftool-2 --type string --set /apps/compiz-1/plugins/scale/screen0/options/initiate_key Disabled
