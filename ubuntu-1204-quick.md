@@ -211,8 +211,8 @@ ubuntu 下系统和应用程序有两种方式保存配置.
 
 |     | GUI 编辑器 | 命令行操作
 | --- | --- | --- | ---
-| 旧方式 | gconf-editor gconf-editor | gconf2 gconftool-2
-| 新方式 | dconf-tools dconf-editor | libglib2.0-bin gsettings
+| 旧方式 | gconf-editor `gconf-editor` | gconf2 `gconftool-2`
+| 新方式 | dconf-tools `dconf-editor` | libglib2.0-bin `gsettings`
 
 ```sh
 # 查看所有配置
@@ -228,6 +228,10 @@ gsettings set path.to key value
 LANGUAGE=en_US:en LANG=en_US.UTF-8 /usr/bin/xdg-user-dirs-update --force
 #重新登陆后系统自动运行 `/usr/bin/xdg-user-dirs-gtk-update` 
 #提示修改文件名时选择 "否", 并勾选 "不要再提示".
+# 删除 `~/.config/user-dirs.locale` 文件, 就不会再提示 locale 变更.
+rm ~/.config/user-dirs.locale
+#反之, 可创建该文件恢复提示
+#echo 'en_US' > user-dirs.locale
 
 # 删除 `.pam_environment` 文件中 "^LC_" 相关设置.
 sed -i '/^LC_/ d' .pam_environment
