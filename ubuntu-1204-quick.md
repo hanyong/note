@@ -121,7 +121,7 @@ LiveCD 默认也不支持 lvm, 重启到 LiveCD 安装 lvm2 后也不能自动�
 # vim 基本配置
 sudo tee /etc/vim/vimrc.local <<EOF
 set ts=4 sw=4 nu
-set et
+"set et
 set nobackup
 set backupdir=~/tmp,/tmp,.
 EOF
@@ -205,39 +205,83 @@ sudo gem install --no-rdoc --no-ri gollum
 
 ## 个人
 
-### 设置 "HOME" 目录下的文件夹为英文名
+ubuntu 下系统和应用程序有两种方式保存配置.
 
-"用户账户" 修改用户语言为 "英语(美国)",
-重新登陆后系统自动运行 `/usr/bin/xdg-user-dirs-gtk-update` 
-提示修改文件名, 选择 "Yes".
-再次修改用户语言恢复为 "汉语", 
-重启登陆后提示修改文件名时选择 "否", 并勾选 "不要再提示".
-
-删除 `.pam_environment` 文件中 "^LC_" 相关设置.
+|     | GUI 编辑器 | 命令行操作
+| --- | --- | --- | ---
+| 旧方式 | gconf-editor gconf-editor | gconf2 gconftool-2
+| 新方式 | dconf-tools dconf-editor | libglib2.0-bin gsettings
 
 ```sh
-sed -i '/^LC_/ d' .pam_environment
+# 查看所有配置
+gconftool-2 -R
+gsettings list-recursively
+# 设置值
+gconftool-2 --type int|bool|float|string|list|pair /path/to/key value
+gsettings set path.to key value
 ```
 
-## inputrc
-
 ```sh
+# 设置 "HOME" 目录下的文件夹为英文名
+LANGUAGE=en_US:en LANG=en_US.UTF-8 /usr/bin/xdg-user-dirs-update --force
+#重新登陆后系统自动运行 `/usr/bin/xdg-user-dirs-gtk-update` 
+#提示修改文件名时选择 "否", 并勾选 "不要再提示".
+
+# 删除 `.pam_environment` 文件中 "^LC_" 相关设置.
+sed -i '/^LC_/ d' .pam_environment
+
+# inputrc
 cat <<'EOF' > ~/.inputrc
 $include /etc/inputrc
-
-# mappings for Ctrl-left-arrow and Ctrl-right-arrow for word moving
-"\e[1;5C": forward-word
-"\e[1;5D": backward-word
 
 # mappings for Ctrl-up-arrow and Ctrl-down-arrow for history search
 "\e[1;5A": history-search-backward
 "\e[1;5B": history-search-forward
 EOF
-```
+
+## gnome classic
+# move min/max/close buttons
+gconftool-2 --set "/apps/metacity/general/button_layout" --type string ":minimize,maximize,close"
+# Run dialog
+#gconftool-2 --set "/apps/metacity/global_keybindings/panel_run_dialog" --type string "<Alt>F2"
+
+# update-notifier
+gsettings set com.ubuntu.update-notifier auto-launch false
+
+# "显示桌面", "Alt" + 右键, "移动", 拖到最右下.
+# 完整指示器, "Alt" + 右键, "Move", 拖到右下角面板上.
+# 用户完整名字设置为空可避免显示用户名.
+# 运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
+# 取消 "show-events".
+gsettings set com.canonical.indicator.datetime show-events false
+gsettings set com.canonical.indicator.datetime time-format custom
+gsettings set com.canonical.indicator.datetime custom-time-format '%F %A %H:%M'
+# 或者删除 "完整指示器", 依次添加 "指示器小程序", "时钟" 和 "指示器小程序会话" 到右下角.
+#sudo aptitude install -y indicator-applet indicator-applet-session
+
+# 桌面切换, 右键, "首选项", "工作区的数量" 修改为 "1".
+# compiz
+gconftool-2 --type int --set /apps/compiz-1/general/screen0/options/hsize 1
+gconftool-2 --type int --set /apps/compiz-1/general/screen0/options/vsize 1
+# "Alt" + 右键, "从面板上删除".
+
+# ccsm
+# 禁用插件 "Desktop Wall" (wall), "Grid" (grid), "Snapping Windows" (snap),
+# 启用插件 "Static Application Switcher" (staticswitcher)
+( x="$(python2 -c '
+toDel = [ "wall", "grid", "snap", ]
+toAdd = [ "staticswitcher", ]
+s0 = r"""'"$(gconftool-2 --get /apps/compiz-1/general/screen0/options/active_plugins)"'"""
+L = s0[1:-1].split(",")
+L = [ e for e in L if not e in toDel]
+L += [e for e in toAdd if not e in L]
+print ",".join(L)
+')" && gconftool-2 --type list --list-type string --set /apps/compiz-1/general/screen0/options/active_plugins "[$x]"
+)
+# 窗口管理 "缩放" 插件禁用 '<Shift><Alt>Up' 快捷键, 避免跟 eclipse 快捷键冲突
+gconftool-2 --type string --set /apps/compiz-1/plugins/scale/screen0/options/initiate_key Disabled
 
 ## gedit
-
-```sh
 # "编辑" -> "首选项".
 # "查看" tab, 勾选 "显示行号", 取消 "启用自动换行".
 gsettings set org.gnome.gedit.preferences.editor display-line-numbers true
@@ -252,19 +296,26 @@ gsettings set org.gnome.gedit.preferences.editor create-backup-copy false
 # 显示文件末尾换行符
 # @see https://bugs.launchpad.net/ubuntu/+source/gedit/+bug/379367
 gsettings set org.gnome.gedit.preferences.editor ensure-trailing-newline false
-```
 
 ## gnome-terminal
-
-"编辑" -> "配置文件首选项".
-
-* "颜色" tab, 取消 "使用系统主题中的颜色", "内置方案" 选择 "白底黑字".
+# "编辑" -> "配置文件首选项".
+# "颜色" tab, 取消 "使用系统主题中的颜色",
+gconftool-2 --type bool --set /apps/gnome-terminal/profiles/Default/use_theme_colors false
+# "内置方案" 选择 "白底黑字"
+gconftool-2 --type string --set /apps/gnome-terminal/profiles/Default/background_color '#FFFFFFFFFFFF'
+gconftool-2 --type string --set /apps/gnome-terminal/profiles/Default/foreground_color '#000000000000'
+# "黑底灰字"
+#gconftool-2 --type string --set /apps/gnome-terminal/profiles/Default/background_color '#000000000000'
+#gconftool-2 --type string --set /apps/gnome-terminal/profiles/Default/foreground_color '#AAAAAAAAAAAA'
 
 ## sunpinyin
-
-运行 `/usr/lib/ibus-sunpinyin/ibus-setup-sunpinyin`.
-* "Keyboard" tab, "Page Flip" 选中 "- / =", "[ / ]".
-* "General" tab, "Character Set" 选择 "GB18030" (或保持默认 "GBK").
+# 运行 `/usr/lib/ibus-sunpinyin/ibus-setup-sunpinyin`.
+# "Keyboard" tab, "Page Flip" 选中 "- / =", "[ / ]".
+gconftool-2 --type bool --set /desktop/ibus/engine/SunPinyin/Keyboard/Page/Brackets true
+gconftool-2 --type bool --set /desktop/ibus/engine/SunPinyin/Keyboard/Page/MinusEquals true
+# "General" tab, "Character Set" 选择 "GB18030" (或保持默认 "GBK").
+#gconftool-2 --type string --set /desktop/ibus/engine/SunPinyin/General/Charset GB18030
+```
 
 ## ssh
 
@@ -285,43 +336,11 @@ git config --global merge.tool bc3
 git config --global push.default current
 ```
 
-## gnome classic
-
-```sh
-# move min/max/close buttons
-gconftool-2 --set "/apps/metacity/general/button_layout" --type string ":minimize,maximize,close"
-
-# Run dialog
-#gconftool-2 --set "/apps/metacity/global_keybindings/panel_run_dialog" --type string "<Alt>F2"
-
-# update-notifier
-gsettings set com.ubuntu.update-notifier auto-launch false
-
-# "显示桌面", "Alt" + 右键, "移动", 拖到最右下.
-# 完整指示器, "Alt" + 右键, "Move", 拖到右下角面板上.
-# 用户完整名字设置为空可避免显示用户名.
-# 运行 `dconf-editor`, 展开 `com.canonical.indicator.datetime`, 
-# 取消 "show-events".
-gsettings set com.canonical.indicator.datetime show-events false
-gsettings set com.canonical.indicator.datetime time-format custom
-gsettings set com.canonical.indicator.datetime custom-time-format '%F %A %H:%M'
-# 或者删除 "完整指示器", 依次添加 "指示器小程序", "时钟" 和 "指示器小程序会话" 到右下角.
-#sudo aptitude install -y indicator-applet indicator-applet-session
-```
-
-* 提示框颜色
-
-运行 `gnome-color-chooser`, "特定的" tab,
-"小提示" 选中修改 "前景" 和 "背景", 颜色值不用设, 默认的就好, 点 "应用", 然后 "关闭".
-
-这个会影响 eclipse 和 firefox 的提示框颜色, firefox 可能要重启下. 设置后提示框都变漂亮了.
-
 ## firefox
 
 运行 `firefox -P`, "Create Profile...", name "default", 
 "Choose Folder...", "~/var/firefox/default", "Finish".
 "Start Firefox".
-
 
 >如果没有已有配置，可进行如下基本设置.
 
@@ -334,10 +353,6 @@ gsettings set com.canonical.indicator.datetime custom-time-format '%F %A %H:%M'
 弹出密码输入对话框, 输入证书密码, 点 "确定".
 
 ## 任务栏
-
-### 桌面切换
-* 右键, "首选项", "工作区的数量" 修改为 "1".
-* "Alt" + 右键, "从面板上删除".
 
 ### 顶面板
 
