@@ -134,10 +134,14 @@ NAME_REGEX="^[a-z][-a-z0-9_.]*$"
 
 # 基本工具
 sudo apt-get update
-sudo apt-get install -y aptitude dconf-tools gconf-editor realpath
+sudo apt-get install -y aptitude
+# 配置编辑工具
+sudo aptitude install -y dconf-tools gconf-editor
+# 命令行安装本地 ".deb" 文件
+sudo aptitude install -y gdebi-core
 # 其他工具
 #sudo aptitude install -y gnome-color-chooser
-sudo aptitude install -y tree unrar
+sudo aptitude install -y realpath tree unrar
 
 # fix "小提示" 前景色, 背景色
 sudo sed -i -r -e 's/tooltip_bg_color\:\#\w+/tooltip_bg_color:#FFFFAF/' \
