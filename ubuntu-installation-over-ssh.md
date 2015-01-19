@@ -1,14 +1,33 @@
 通过远程 ssh 安装 ubuntu
 ===
 
+**未测试成功**:
+
+0. CentOS 6.4 下 chroot 到 debootstrap 安装的系统后, 安装 openssh-server 失败.
+0. 重启进入 debootstrap 安装的系统后网络设置不正确, 机器 ping 不同, 更无法 ssh 登陆.
+
 假如你有一台机器, 只能通过 ssh 登陆上去, 如何在这台机器上重装 ubuntu 系统?
-通过 ssh 安装 ubuntu, 核心是使用 debootstrap 进行安装, 官方有 3 篇文档可以参考,
+通过 ssh 安装 ubuntu, 核心是使用 debootstrap 安装系统, 官方有 3 篇文档可以参考,
 不过有些文档较旧, 里面描述的有些内容已经过时没有更新.
 这 3 篇文档按从新到旧的次序依次是:
 
 0. [Installation/OverSSH-Light](https://help.ubuntu.com/community/Installation/OverSSH-Light)
 0. [Installation/FromLinux#Without_CD](https://help.ubuntu.com/community/Installation/FromLinux#Without_CD)
 0. [Installation/OverSSH](https://help.ubuntu.com/community/Installation/OverSSH)
+
+## 准备安装新系统的分区
+
+准备安装新系统的分区, 这里就不详述了, 使用 `parted` 或 `fdisk` 均可, `parted` 更新更强大.
+
+```sh
+mkfs.ext4 /dev/sdb1
+mkswap /dev/sdb2
+```
+
+需要注意的是:
+
+0. 安装系统的 `/boot` 所在分区要设置成可启动的
+0. 安装完系统后别忘了安装 `linux-generic`, `grub-pc-bin` 和 `openssh-server`, 以能够启动并登陆系统.
 
 ## 安装 debootstrap
 
@@ -32,18 +51,13 @@ ubuntu 系统或支持 `dpkg` 的系统可以下载 `.deb` 包并使用 `dpkg -i
 还可以下载 `udeb` 版本微 deb 包, 或者下载 `.tar.gz` 源码包版本, 参照 `README` 文档安装使用.
 
 ```sh
-wget 'http://mirrors.ustc.edu.cn/ubuntu/pool/main/d/debootstrap/debootstrap_1.0.59_all.deb'
-mkdir tmp
-cd tmp
-ar xf ../debootstrap_1.0.59_all.deb
+mkdir work
+cd work
+wget 'http://ubuntu.01link.hk/pool/main/d/debootstrap/debootstrap_1.0.59_all.deb'
+ar xf debootstrap_1.0.59_all.deb
 cd /
-tar xf ~/tmp/data.tar.gz
+tar xf ~/work/data.tar.xz
 ```
-
-## 准备安装新系统的分区
-
-准备安装新系统的分区, 这里就不详述了, 使用 `parted` 或 `fdisk` 均可, `parted` 更新更强大.
-需要注意的是安装系统的 `/boot` 所在分区要设置成可启动的, 安装完系统后别忘了安装 grub 能启动新系统.
 
 ## 使用 debootstrap 安装系统
 
@@ -53,7 +67,8 @@ tar xf ~/tmp/data.tar.gz
 ```sh
 mkdir /mnt/ubuntu
 mount /dev/sdb1 /mnt/ubuntu/
-debootstrap --arch=amd64 trusty /mnt/ubuntu/ http://ubuntu.01link.hk/
+debootstrap --arch=amd64 --include=openssh-server,cgroup-lite trusty /mnt/ubuntu/ http://ubuntu.01link.hk/
+#debootstrap --arch=amd64 --include=aptitude,linux-generic,grub-pc,vim trusty /mnt/ubuntu/ http://mirrors.aliyun.com/ubuntu/
 ```
 
 ## 基本系统设置
@@ -63,47 +78,86 @@ debootstrap --arch=amd64 trusty /mnt/ubuntu/ http://ubuntu.01link.hk/
 
 ```
 echo $HOSTNAME > /mnt/ubuntu/etc/hostname
-#cp /etc/hostname /mnt/ubuntu/etc/
-cp /etc/fstab /mnt/ubuntu/etc/
+#rsync -av /etc/hostname /mnt/ubuntu/etc/
+#rsync -av /etc/fstab /mnt/ubuntu/etc/
 # fstab 参考配置
 cat <<'EOF' > /mnt/ubuntu/etc/fstab
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc             proc    nodev,noexec,nosuid    0 0
-/dev/sdb1       /                 ext4    defaults        0 1
-/dev/sdb2       /opt              ext4    defaults        0 2
-/dev/sdb3       none              swap    sw              0 0
+proc            /proc             proc    defaults        0 0
+/dev/sdb1       /                 ext4    defaults,errors=remount-ro        0 1
+/dev/sdb2       none              swap    sw              0 0
 #tmpfs           /dev/shm          tmpfs   defaults        0 0
 #devpts          /dev/pts          devpts  gid=5,mode=620  0 0
 #sysfs           /sys              sysfs   defaults        0 0
 EOF
 #vim /mnt/ubuntu/etc/fstab
-cp /etc/networks /mnt/ubuntu/etc/
-#cp /etc/network/interfaces /mnt/ubuntu/etc/network/
+```
+
+```sh
+#rsync -av /etc/networks /mnt/ubuntu/etc/
+#rsync -av /etc/network/interfaces /mnt/ubuntu/etc/network/
 #vim /mnt/ubuntu/etc/network/interfaces
 # interfaces 参考配置, ifconfig 查看当前配置相关信息
-cat <<EOF >> /mnt/ubuntu/etc/network/interfaces
+cat <<EOF >> /etc/network/interfaces
 auto lo
 iface lo inet loopback
 
 # seth0
 auto seth0
 iface seth0 inet static
+    hwaddress 00:15:5d:d7:02:25
 	address 118.193.215.39
-	network 118.193.215.0
-	broadcast 118.193.215.127
-	geteway 118.193.215.1
 	netmask 255.255.255.128
+	gateway 118.193.215.1
 EOF
+```
+
+vps CentOS 网卡配置
+
+```sh
+[root@cloud ~]# cat /etc/sysconfig/network-scripts/ifcfg-eth0 
+DEVICE=seth0
+BOOTPROTO=none
+ONBOOT=yes
+TYPE=Ethernet
+DEFROUTE=yes
+IPV6INIT=no
+IPV4_FAILURE_FATAL=yes
+PEERDNS=yes
+NAME=VPSNetCard
+HWADDR=00:15:5d:d7:02:25
+IPADDR=118.193.215.39
+NETMASK=255.255.255.128
+GATEWAY=118.193.215.1
+DNS1=8.8.8.8
+DNS2=8.8.4.4
 ```
 
 ## 进入新安装系统环境
 
-进入新安装系统环境前, 需要先为新系统挂载 `/proc` 和 `/dev`.
+# vps 系统重新初始化后设置
+```sh
+yum remove -y gnome-desktop gnome-session gnome-session-xsession
+mkdir /mnt/ubuntu
+echo 'UUID=4ed1920a-e87b-4b91-b4da-e1e4d5401578 /mnt/ubuntu ext4 defaults 1 1' >> /etc/fstab
+mount /mnt/ubuntu
+```
+
+进入新安装系统环境前, 需要先为新系统挂载 `/dev`.
 
 ```sh
-mount -t proc /proc /mnt/ubuntu/proc
 mount -o bind /dev /mnt/ubuntu/dev
 LANG=en_US.UTF-8 chroot /mnt/ubuntu
+```
+
+为 chroot 系统挂载重要系统目录:
+
+```sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t devpts none /dev/pts
+#export HOME=/root
+#export LC_ALL=C
 ```
 
 ## 设置时区和语言
@@ -116,17 +170,8 @@ LANG="en_US.UTF-8"
 LANGUAGE=
 EOF
 locale-gen en_US.UTF-8 zh_CN.UTF-8
-dpkg-reconfigure -f noninteractive tzdata
-dpkg-reconfigure locales
-```
-
-## 更新 root 密码, 添加用户
-
-```sh
-passwd
-adduser --gecos '' hanyong
-adduser hanyong sudo
-dpkg-reconfigure --default-priority passwd
+#dpkg-reconfigure -f noninteractive tzdata
+#dpkg-reconfigure locales
 ```
 
 ## 安装其他软件包, 安装 OpenSSH 服务器和 grub
@@ -134,19 +179,24 @@ dpkg-reconfigure --default-priority passwd
 ```sh
 sudo apt-get update
 sudo apt-get install aptitude
-sudo aptitude install linux-{image,headers}-generic-lts-trusty
-sudo aptitude install openssh-server
+#sudo aptitude install linux-{image,headers}-generic-lts-trusty
+sudo aptitude install linux-generic
+#sudo aptitude install openssh-server
 sudo grub-install /dev/sda
 sudo update-grub
 ```
 
 # 重启
 
-```
+```sh
+umount /dev/pts
+umount /sys
+umount /proc
 exit
+```
+
+```sh
 cd /
-umount /mnt/ubuntu/proc
-umount /mnt/ubuntu/dev
-umount /mnt/ubuntu
+umount /mnt/ubuntu/
 reboot
 ```

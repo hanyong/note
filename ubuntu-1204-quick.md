@@ -23,6 +23,57 @@ kernel /home/software/linux/ubuntu-12.04.4-desktop-amd64/casper/vmlinuz.efi boot
 initrd /home/software/linux/ubuntu-12.04.4-desktop-amd64/casper/initrd.lz
 ```
 
+ubuntu 下使用 grub2 启动安装镜像, 可在 `/etc/grub.d/41_custom` 末尾添加如下配置:
+
+```sh
+root="hd0,msdos1"
+root_uuid="fe92e557-c159-4266-80c7-648547c07e3c"
+search_root="#recordfail
+        #load_video
+        #gfxmode \$linux_gfx_mode
+        insmod gzio
+        insmod part_msdos
+        insmod ext2
+        #insmod lvm
+        set root='$root'
+        search --no-floppy --fs-uuid --set=root $root_uuid"
+
+for iso in /*.iso ; do
+        dir="${iso%.iso}"
+        name="$(basename $dir)"
+        vm=$(ls "$dir/casper/vmlinuz"*)
+        init=$(ls "$dir/casper/initrd"*)
+        cat <<EOF
+menuentry '$name' {
+        $search_root
+        linux $vm boot=casper iso-scan/filename=$iso locale=zh_CN.UTF-8
+        initrd $init
+}
+EOF
+done
+```
+
+或者使用 `dd` 或 `rsync -av` 命令将镜像文件写到某分区, 在 `/etc/grub.d/40_custom` 末尾添加如下配置。
+参考: https://help.ubuntu.com/community/Installation/FromLinux
+
+```sh
+menuentry 'hd-live' {
+        load_video
+        gfxmode $linux_gfx_mode
+        insmod gzio
+        insmod part_msdos
+        insmod ext2
+        insmod loopback
+        insmod lvm
+        set root='hd1,msdos3'
+        search --no-floppy --fs-uuid --set=root d69cfc63-6972-4370-89f5-a0df1846e3f6
+        linux /casper/vmlinuz.efi boot=casper root=/dev/ram1 ramdisk_size=1048576 rw
+        initrd /casper/initrd.lz
+}
+```
+
+保存后执行 `sudo update-grub` 重新生成配置.
+
 重启进入 LiveCD 桌面后执行下列命令卸载镜像挂载分区:
 
 ```sh
