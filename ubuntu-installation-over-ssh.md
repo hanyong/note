@@ -137,7 +137,7 @@ DNS2=8.8.4.4
 
 # vps 系统重新初始化后设置
 ```sh
-yum remove -y gnome-desktop gnome-session gnome-session-xsession
+yum remove -y gnome-desktop gnome-session gnome-session-xsession hal cups postfix
 mkdir /mnt/ubuntu
 echo 'UUID=4ed1920a-e87b-4b91-b4da-e1e4d5401578 /mnt/ubuntu ext4 defaults 1 1' >> /etc/fstab
 mount /mnt/ubuntu
@@ -196,7 +196,6 @@ exit
 ```
 
 ```sh
-cd /
-umount /mnt/ubuntu/
+umount /mnt/ubuntu/dev/
 reboot
 ```
