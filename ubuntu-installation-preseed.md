@@ -4,6 +4,21 @@ ubuntu 自动安装
 启动安装 CD, 
 参考: https://help.ubuntu.com/community/Installation/FromLinux#Alternate_CD
 
+从 `ubuntu-releases` 和 `ubuntu` 镜像网站下载安装 CD 和硬盘安装文件.
+安装 CD 必须放在分区根目录,
+要求安装程序可识别分区文件系统, `fat32`, `ntfs`, `ext3`, `ext4` 应该都可以, lvm 未测试.
+硬盘安装文件任意目录均可, 建议放到 install 目录.
+硬盘安装文件会尝试在所有分区根目录查找光盘镜像.
+
+```sh
+cd /
+wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu-releases/trusty/ubuntu-14.04.1-server-amd64.iso'
+mkdir /install
+cd /install
+wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/vmlinuz'
+wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/initrd.gz'
+```
+
 `/etc/grub.d/40_custom` 添加如下配置:
 
 ```sh
@@ -15,9 +30,9 @@ menuentry 'hd-inst' {
         insmod ext2
         insmod loopback
         insmod lvm
-        set root='hd1,msdos3'
-        search --no-floppy --fs-uuid --set=root fdc69148-853d-4486-b3b0-5890471e399f
-        linux /install/vmlinuz root=/dev/ram1 ramdisk_size=1048576 rw file=/hd-media/my.seed
+        set root='hd1,msdos1'
+        search --no-floppy --fs-uuid --set=root 4ed1920a-e87b-4b91-b4da-e1e4d5401578
+        linux /install/vmlinuz root=/dev/ram1 ramdisk_size=1048576 rw preseed/file=/hd-media/my.seed
         initrd /install/initrd.gz
 }
 ```

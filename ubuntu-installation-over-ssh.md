@@ -137,22 +137,32 @@ DNS2=8.8.4.4
 
 # vps 系统重新初始化后设置
 ```sh
-yum remove -y gnome-desktop gnome-session gnome-session-xsession hal cups postfix
+yum remove xorg-x11-server-Xorg hal cups postfix
 mkdir /mnt/ubuntu
 echo 'UUID=4ed1920a-e87b-4b91-b4da-e1e4d5401578 /mnt/ubuntu ext4 defaults 1 1' >> /etc/fstab
 mount /mnt/ubuntu
+mount -o bind /dev /mnt/ubuntu/dev
+chroot /mnt/ubuntu
+
+# 为 chroot 后的系统挂载重要系统目录:
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t devpts none /dev/pts
+grub-install /dev/sda
+grub-set-default CentOS
 ```
 
 进入新安装系统环境前, 需要先为新系统挂载 `/dev`.
 
 ```sh
 mount -o bind /dev /mnt/ubuntu/dev
-LANG=en_US.UTF-8 chroot /mnt/ubuntu
+chroot /mnt/ubuntu
 
 # 为 chroot 后的系统挂载重要系统目录:
 mount -t proc none /proc
 mount -t sysfs none /sys
 mount -t devpts none /dev/pts
+mount /hd-inst
 #export HOME=/root
 #export LC_ALL=C
 ```
