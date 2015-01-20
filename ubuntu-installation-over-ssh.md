@@ -148,17 +148,16 @@ mount /mnt/ubuntu
 ```sh
 mount -o bind /dev /mnt/ubuntu/dev
 LANG=en_US.UTF-8 chroot /mnt/ubuntu
-```
 
-为 chroot 系统挂载重要系统目录:
-
-```sh
+# 为 chroot 后的系统挂载重要系统目录:
 mount -t proc none /proc
 mount -t sysfs none /sys
 mount -t devpts none /dev/pts
 #export HOME=/root
 #export LC_ALL=C
 ```
+
+退出时记得 umount 对应的文件系统, 参考重启说明.
 
 ## 设置时区和语言
 
@@ -179,7 +178,6 @@ locale-gen en_US.UTF-8 zh_CN.UTF-8
 ```sh
 sudo apt-get update
 sudo apt-get install aptitude
-#sudo aptitude install linux-{image,headers}-generic-lts-trusty
 sudo aptitude install linux-generic
 #sudo aptitude install openssh-server
 sudo grub-install /dev/sda
@@ -193,9 +191,8 @@ umount /dev/pts
 umount /sys
 umount /proc
 exit
-```
 
-```sh
+# 回到 chroot 前的系统只执行
 umount /mnt/ubuntu/dev/
 reboot
 ```
