@@ -12,11 +12,14 @@ ubuntu 自动安装
 
 ```sh
 cd /
-wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu-releases/trusty/ubuntu-14.04.1-server-amd64.iso'
+#wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu-releases/trusty/ubuntu-14.04.1-server-amd64.iso'
+wget --continue 'http://mirrors.ustc.edu.cn/ubuntu-releases/trusty/ubuntu-14.04.1-server-amd64.iso'
 mkdir /install
 cd /install
-wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/vmlinuz'
-wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/initrd.gz'
+#wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/vmlinuz'
+#wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/initrd.gz'
+wget --continue 'http://mirrors.ustc.edu.cn/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/vmlinuz'
+wget --continue 'http://mirrors.ustc.edu.cn/ubuntu/dists/trusty/main/installer-amd64/current/images/hd-media/initrd.gz'
 ```
 
 `/etc/grub.d/40_custom` 添加如下配置:
