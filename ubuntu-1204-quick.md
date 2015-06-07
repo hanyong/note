@@ -13,6 +13,17 @@ ubuntu 12.04
         └── vmlinuz.efi
 ```
 
+ubuntu 下可使用如下命令完成操作:
+
+```sh
+cd /
+#sudo wget --continue 'http://ftp.cuhk.edu.hk/pub/Linux/ubuntu-releases/trusty/ubuntu-12.04.5-desktop-amd64.iso'
+sudo wget --continue 'http://mirrors.ustc.edu.cn/ubuntu-releases/trusty/ubuntu-12.04.5-server-amd64.iso'
+sudo mount -o loop,ro ubuntu-*-desktop-*.iso cdrom/
+sudo rsync -avR cdrom/./casper/{vmlinuz,initrd}* $(python2 -c 'import sys; print sys.argv[1][:-4]' ubuntu-*-desktop-*.iso)/
+sudo umount cdrom/
+```
+
 使用 "Grub 4 DOS" (或 EasyBCD) 启动安装镜像.
 启动配置如下:
 
@@ -26,27 +37,21 @@ initrd /home/software/linux/ubuntu-12.04.4-desktop-amd64/casper/initrd.lz
 ubuntu 下使用 grub2 启动安装镜像, 可在 `/etc/grub.d/41_custom` 末尾添加如下配置:
 
 ```sh
-root="hd0,msdos1"
-root_uuid="fe92e557-c159-4266-80c7-648547c07e3c"
-search_root="#recordfail
-        #load_video
-        #gfxmode \$linux_gfx_mode
-        insmod gzio
-        insmod part_msdos
-        insmod ext2
-        #insmod lvm
-        set root='$root'
-        search --no-floppy --fs-uuid --set=root $root_uuid"
-
-for iso in /*.iso ; do
+for iso in /ubuntu-*-desktop-*.iso ; do
+        echo "Found: $iso" >&2
         dir="${iso%.iso}"
         name="$(basename $dir)"
         vm=$(ls "$dir/casper/vmlinuz"*)
         init=$(ls "$dir/casper/initrd"*)
         cat <<EOF
-menuentry '$name' {
-        $search_root
-        linux $vm boot=casper iso-scan/filename=$iso locale=zh_CN.UTF-8
+menuentry '$name LiveCD' {
+        insmod gzio
+        insmod part_msdos
+        insmod ext2
+        #insmod lvm
+        set root='hd0,msdos1'
+        search --no-floppy --file --set=root $vm
+        linux $vm boot=casper iso-scan/filename=$iso
         initrd $init
 }
 EOF

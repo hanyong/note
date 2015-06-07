@@ -36,6 +36,7 @@ ubuntu 下 grub2 可在 `/etc/grub.d/41_custom` 末尾添加如下配置:
 
 ```
 for iso in /ubuntu-*-server-*.iso ; do
+        echo "Found: $iso" >&2
         dir="${iso%.iso}"
         name="$(basename $dir)"
         vm=$(ls "/install/vmlinuz"*)
