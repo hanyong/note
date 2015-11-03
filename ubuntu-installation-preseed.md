@@ -120,3 +120,20 @@ d-i grub-installer/skip boolean true
 # too:
 d-i lilo-installer/skip boolean true
 ```
+
+如果硬盘安装失败, 最简单的办法是使用网络安装, 首先从镜像网站下载对于版本的网络安装镜像:
+
+```
+wget --continue 'http://mirrors.ustc.edu.cn/ubuntu/dists/precise/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/linux'
+wget --continue 'http://mirrors.ustc.edu.cn/ubuntu/dists/precise/main/installer-amd64/current/images/netboot/ubuntu-installer/amd64/initrd.gz'
+```
+
+使用 grub4dos 或 grub2 加载安装镜像, 为简化操作, 可直接指定一些预设参数.
+关键配置为语言、键盘、镜像、网络、主机名.
+
+```
+title ubuntu netboot
+find --set-root --ignore-floppies --ignore-cd /netboot/linux
+kernel /netboot/linux locale=en_US.UTF-8 console-setup/ask_detect=false keyboard-configuration/layoutcode=us mirror/protocol=http mirror/country=manual mirror/http/hostname=mirrors.aliyun.com mirror/http/directory=/ubuntu mirror/http/proxy= netcfg/choose_interface=eth1 netcfg/disable_autoconfig=true netcfg/get_ipaddress=121.42.46.16 netcfg/get_netmask=255.255.252.0 netcfg/get_gateway=121.42.47.247 netcfg/get_nameservers=8.8.8.8 netcfg/confirm_static=true netcfg/get_hostname=cn netcfg/get_domain=oolap.com 
+initrd /netboot/initrd.gz
+```
